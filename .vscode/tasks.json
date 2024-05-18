@@ -10,6 +10,9 @@
             "args": [
                 "-j16"
             ],
+            "options": {
+                "cwd": "./src"
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true

@@ -1,17 +1,25 @@
 {
-    "version": "0.2.0",
+    // Followed guide: https://felixjones.co.uk/mgba_gdb/vscode.html
     "configurations": [
         {
-            "name": "(Windows) Launch",
-            "type": "cppvsdbg",
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
             "request": "launch",
-            "program": "C:/Program Files/mGBA/mGBA.exe",
-            "args": ["${workspaceFolder}/template1.gba"],
+            "targetArchitecture": "arm",
+            "program": "${workspaceFolder}/src/src.elf",
+            "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "build",
+            "cwd": "${fileDirname}",
             "environment": [],
-            "console": "integratedTerminal"
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerServerAddress": "localhost:2345",
+            "miDebuggerPath": "C:/devkitPro/devkitARM/bin/arm-none-eabi-gdb.exe",
+            "setupCommands": [
+                {
+                    "text": "shell start /b \"\" \"${env:ProgramFiles}/mGBA/mGBA.exe\" -g \"${workspaceFolder}/src/src.elf\""
+                }
+            ]
         }
     ]
 }

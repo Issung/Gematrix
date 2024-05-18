@@ -73,9 +73,9 @@ int main()
 
     auto spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
     
-    auto red = bn::color(31, 0, 0);
-    auto span = bn::span<const bn::color>(&red, 16);
-    auto red_palette = bn::sprite_palette_item(span, bn::bpp_mode::BPP_4);
+    //auto red = bn::color(31, 0, 0);
+    //auto span = bn::span<const bn::color>(&red, 16);
+    //auto red_palette = bn::sprite_palette_item(span, bn::bpp_mode::BPP_4);
 
     bn::fixed_point points[rows][cols]; // The point of each drawn sprite, saved for use by the selector.
 
@@ -87,7 +87,7 @@ int main()
             auto y = (30 * r) - 60;
             points[r][c] = bn::fixed_point(x, y);
             auto gem_sprite = bn::sprite_items::gem.create_sprite(x, y);
-            gem_sprite.set_palette(red_palette);
+            //gem_sprite.set_palette(red_palette);
 
             gem_sprites.push_back(gem_sprite);
         }

@@ -1,33 +1,33 @@
 {
-  "env": {},
-  "configurations": [
-    {
-      "name": "Butano",
-      "includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/build",
-        "${workspaceFolder}/vendor/butano/butano/include",
-        "/opt/devkitpro/libgba/include/**",
-        "/opt/devkitpro/devkitARM/include/**",
-        "/opt/devkitpro/devkitARM/arm-none-eabi/include/**"
-      ],
-      "defines": [],
-      "compilerPath": "/opt/devkitpro/devkitARM/bin/arm-none-eabi-g++",
-      "cStandard": "c11",
-      "cppStandard": "c++20",
-      "intelliSenseMode": "linux-gcc-arm",
-      "browse": {
-        "path": [
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/vendor/butano/butano/include",
-          "/opt/devkitpro/libgba/include",
-          "/opt/devkitpro/devkitARM/include",
-          "/opt/devkitpro/devkitARM/arm-none-eabi/include"
-        ],
-        "limitSymbolsToIncludedHeaders": true,
-        "databaseFilename": ""
-      }
-    }
-  ],
-  "version": 4
+    "env": {},
+    "configurations": [
+        {
+            "name": "Butano",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/build",
+                "${workspaceFolder}/vendor/butano/butano/include",
+                "/opt/devkitpro/libgba/include/**",
+                "/opt/devkitpro/devkitARM/include/**",
+                "/opt/devkitpro/devkitARM/arm-none-eabi/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "C:\\devkitPro\\devkitARM\\bin\\arm-none-eabi-g++.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-gcc-arm",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/include",
+                    "${workspaceFolder}/vendor/butano/butano/include",
+                    "/opt/devkitpro/libgba/include",
+                    "/opt/devkitpro/devkitARM/include",
+                    "/opt/devkitpro/devkitARM/arm-none-eabi/include"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            }
+        }
+    ],
+    "version": 4
 }

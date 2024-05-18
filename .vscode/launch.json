@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(Windows) Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "C:/Program Files/mGBA/mGBA.exe",
+            "args": ["${workspaceFolder}/template1.gba"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "build",
+            "environment": [],
+            "console": "integratedTerminal"
+        }
+    ]
+}

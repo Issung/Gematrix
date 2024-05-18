@@ -14,13 +14,23 @@
 #include "bn_music_item.h"
 #include "bn_music_items.h"
 #include "bn_sound_items.h"
-//#include "bn_sprite_items_caveman.h"
 #include "player.h"
 #include "bn_sprite_items_gem.h"
 #include "bn_sprite_items_selector.h"
 #include "bn_fixed_point.h"
 #include "bn_fixed.h"
 #include "bn_sprite_palettes.h"
+#include "bn_sprite_palette_ptr.h"
+#include "bn_log.h"
+#include "bn_random.h"
+
+enum class gem_color {
+    Red,
+    Green,
+    Blue,
+    Purple,
+    Orange
+};
 
 namespace 
 {
@@ -35,6 +45,22 @@ namespace
         caveman.set_bg_priority(2);
         caveman.set_z_order(1);
         return caveman;
+    }
+
+    // Restricted to 4bit color depth for now.
+    // TODO: Figure out if there's better ways to do this.
+    bn::sprite_palette_ptr create_palette(int r, int g, int b)
+    {
+        auto color = bn::color(r, g, b);
+        bn::color colors[16];
+        for (int i = 0; i < 16; i++)
+        {
+            colors[i] = color;
+        }
+        auto span = bn::span<bn::color>(colors);
+        auto palette = bn::sprite_palette_item(span, bn::bpp_mode::BPP_4);
+        auto palette_ptr = palette.create_palette();
+        return palette_ptr;
     }
 
     //int lerp(int a, int b, int frames, int frames_max) {
@@ -52,6 +78,9 @@ int main()
 
     const int cols = 6;   // The amount of columns to draw.
     const int rows = 5;   // The amount of rows to draw.
+    const int total_gems = rows * cols;
+    const int max_colors = 5;   // The amount of colors.
+    auto rand = bn::random();
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
 
@@ -61,7 +90,7 @@ int main()
 
     text_generator.set_left_alignment();
     bn::vector<bn::sprite_ptr, 32> text_sprites;
-    bn::vector<bn::sprite_ptr, rows*cols> gem_sprites;
+    bn::vector<bn::sprite_ptr, total_gems> gem_sprites;
 
     //auto mi = bn::music_item(0);
     //mi.play(0.5);
@@ -69,32 +98,54 @@ int main()
 
     int i = 0;
 
-    Player player;
-
     auto spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
     
     //auto red = bn::color(31, 0, 0);
-    //auto span = bn::span<const bn::color>(&red, 16);
+    //bn::color reds[16];
+    //for (int i = 0; i < 16; i++)
+    //{
+    //    reds[i] = red;
+    //}
+    //auto span = bn::span<bn::color>(reds);
     //auto red_palette = bn::sprite_palette_item(span, bn::bpp_mode::BPP_4);
+    bn::sprite_palette_ptr colors[max_colors] = 
+    {
+        create_palette(31, 0, 0),   // Reg
+        create_palette(0, 31, 0),   // Green
+        create_palette(0, 0, 31),   // Blue
+        create_palette(31, 0, 31),  // Purple
+        create_palette(31, 16, 0),  // Orange
+    };
+    //auto red_palette_ptr = create_palette(31, 0, 0);
 
     bn::fixed_point points[rows][cols]; // The point of each drawn sprite, saved for use by the selector.
+    gem_color gems[rows][cols];
 
-    for (int c = 0; c < cols; c++)
+    for (int r = 0; r < rows; r++)
     {
-        for (int r = 0; r < rows; r++)
+        for (int c = 0; c < cols; c++)
+        {
+            auto val = rand.get_int(max_colors);
+            gems[r][c] = (gem_color)val;
+        }
+    }
+
+    for (int r = 0; r < rows; r++)
+    {
+        for (int c = 0; c < cols; c++)
         {
             auto x = (30 * c) - 100;
             auto y = (30 * r) - 60;
             points[r][c] = bn::fixed_point(x, y);
             auto gem_sprite = bn::sprite_items::gem.create_sprite(x, y);
-            //gem_sprite.set_palette(red_palette);
+            auto palette_index = (int)gems[r][c];
+            auto palette = colors[palette_index];
+            gem_sprite.set_palette(palette);
 
             gem_sprites.push_back(gem_sprite);
+            BN_LOG("Made gem c: ", r, " r: ", c);
         }
     }
-
-
-
 
     while (true)
     {
@@ -109,10 +160,10 @@ int main()
 
         if (bn::keypad::a_held())
         {
-            int move_row;
-            int move_col;
+            int move_row = 0;
+            int move_col = 0;
 
-            // TODO: Validation with error sfx and animation?
+            // TODO: Validation with error sfx and animation.
             if (bn::keypad::left_pressed() && sel_col > 0)
             {
                 move_col = -1;
@@ -130,6 +181,11 @@ int main()
             {
                 move_row = +1;
             }
+
+            auto current_gem = gems[sel_row][sel_col];
+            auto target_gem = gems[sel_row + move_row][sel_col + move_col];
+            gems[sel_row][sel_col] = target_gem;
+            gems[sel_row + move_row][sel_col + move_col] = current_gem;
         }
         else
         {
@@ -164,12 +220,23 @@ int main()
         auto selector_point = points[sel_row][sel_col];
         spr_selector.set_position(selector_point);
 
+        for (int r = 0; r < rows; r++)
+        {
+            for (int c = 0; c < cols; c++)
+            {
+                auto gem_sprite = gem_sprites[(r * cols) + c];
+                auto gem_value = gems[r][c];
+                auto palette = colors[(int)gem_value];
+                gem_sprite.set_palette(palette);
+            }
+        }
+
         //i = i + 1;
         //auto istr = bn::to_string<16>(i);
         //auto text = "Frame: " + istr;
         text_sprites.clear();
         text_generator.generate(+70, -73, combination, text_sprites);
-        auto draw_player = player.update(); // sprite only gets drawn if there's still a reference held to it? sprite_ptr is actually a smart pointer
+        //auto draw_player = player.update(); // sprite only gets drawn if there's still a reference held to it? sprite_ptr is actually a smart pointer
         bn::core::update();
     }
 }

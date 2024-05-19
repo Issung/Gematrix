@@ -1,6 +1,6 @@
 # GBA Jam 2024
 
-Fun little experiments messing around with C++.
+Fun little experiments messing around with C++ for [GBA Jam 2024](https://itch.io/jam/gbajam24).
 
 ## Development
 

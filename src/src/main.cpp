@@ -23,70 +23,57 @@
 #include "bn_sprite_palette_ptr.h"
 #include "bn_log.h"
 #include "bn_random.h"
+#include "bn_seed_random.h"
 #include "bn_sprite_actions.h"
 #include "bn_unordered_set.h"
 #include "bn_list.h"
 #include "bn_unique_ptr.h"
 #include "bn_math.h"
+#include "bn_time.h"
 
-enum class gem_color {
-    Red,
-    Green,
-    Blue,
-    Purple,
-    Orange
-};
+#include "board.h"
 
-enum class tween_type {
-    SpriteMove
-};
+bn::fixed_point positions[board::rows][board::cols]; // The point of each drawn sprite, saved for use by the selector.
 
-const int cols = 6;   // The amount of columns to draw.
-const int rows = 5;   // The amount of rows to draw.
-const int total_gems = rows * cols; // Total gems on the board (rows * cols).
-const int max_colors = 5;   // The amount of colors.
-bn::fixed_point positions[rows][cols]; // The point of each drawn sprite, saved for use by the selector.
-gem_color gems[rows][cols];
-
-class tween {
-public:
-    tween_type type;
-    void *action;
-    //void (*complete_callback)();
-
-    tween(bn::sprite_move_to_action action)
-    {
-        this->type = tween_type::SpriteMove;
-        this->action = &action;
-    }
-
-    // Returns true if done.
-    bool update()
-    {
-        bool done = false;
-        if (type == tween_type::SpriteMove)
-        {
-            auto a_ptr = static_cast<bn::sprite_move_to_action*>(action);
-            //BN_LOG("Updates remaining: ", a_ptr->duration_updates());
-            done = a_ptr->done();
-            if (done == false)
-            {
-                a_ptr->update();
-            }
-        }
-
-        // TODO: Callback & discard tween.
-        if (done)
-        {
-            delete(action);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-};
+//class tween {
+//public:
+//    tween_type type;
+//    void *action;
+//    //void (*complete_callback)();
+//
+//    tween(bn::sprite_move_to_action action)
+//    {
+//        this->type = tween_type::SpriteMove;
+//        this->action = &action;
+//    }
+//
+//    // Returns true if done.
+//    bool update()
+//    {
+//        bool done = false;
+//        if (type == tween_type::SpriteMove)
+//        {
+//            auto a_ptr = static_cast<bn::sprite_move_to_action*>(action);
+//            //BN_LOG("Updates remaining: ", a_ptr->duration_updates());
+//            done = a_ptr->done();
+//            if (done == false)
+//            {
+//                a_ptr->update();
+//            }
+//        }
+//
+//        // TODO: Callback & discard tween.
+//        if (done)
+//        {
+//            delete(action);
+//            return true;
+//        }
+//        else
+//        {
+//            return false;
+//        }
+//    }
+//};
 
 //bn::list<tween, 32> tweens;
 
@@ -123,7 +110,7 @@ public:
         auto debug_distance = determine_distance(from_row, from_col, to_row, to_col);
         auto dbg_to = determine_to_position(to_row, to_col);
         //BN_LOG("Created slide for ", from_row, ",", from_col, " to ", to_row, ",", to_col, ". Distance: ", debug_distance);
-        BN_LOG("Created slide for ", from.x(), ",", from.y(), " to ", dbg_to.x(), ",", dbg_to.y());
+        //BN_LOG("Created slide for ", from.x(), ",", from.y(), " to ", dbg_to.x(), ",", dbg_to.y());
     }
     
 private:
@@ -156,19 +143,6 @@ private:
 
 namespace
 {
-    void tet()
-    {
-
-    }
-
-    bn::sprite_ptr draw_caveman()
-    {
-        bn::sprite_ptr caveman = bn::sprite_items::caveman.create_sprite(-50, 0);
-        caveman.set_bg_priority(2);
-        caveman.set_z_order(1);
-        return caveman;
-    }
-
     // Restricted to 4bit color depth for now.
     // TODO: Figure out if there's better ways to do this.
     bn::sprite_palette_ptr create_palette(int r, int g, int b)
@@ -186,12 +160,15 @@ namespace
     }
 }
 
+board b = board();
+
 int main()
 {
     bn::core::init();
     BN_LOG("INIT!");
 
-    auto rand = bn::random();
+    auto current_time = bn::time::current();
+    auto rand = bn::seed_random(current_time.has_value());
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
     bool animating = false; // Is an animation currently playing out.
@@ -202,8 +179,8 @@ int main()
 
     text_generator.set_left_alignment();
     bn::vector<bn::sprite_ptr, 32> text_sprites;
-    text_generator.generate(+70, -70, "SCORE", text_sprites);   // TODO: Fix Y position when gems border is added.
-    bn::vector<bn::sprite_ptr, total_gems> gem_sprites;
+    text_generator.generate(+70, -70, "SCORE", text_sprites);   // TODO: Fix Y position to align with gems border when added.
+    bn::vector<bn::sprite_ptr, board::total_gems> gem_sprites;
 
     //auto mi = bn::music_item(0);
     //mi.play(0.5);
@@ -221,34 +198,35 @@ int main()
     //}
     //auto span = bn::span<bn::color>(reds);
     //auto red_palette = bn::sprite_palette_item(span, bn::bpp_mode::BPP_4);
-    bn::sprite_palette_ptr colors[max_colors] = 
+    bn::sprite_palette_ptr colors[board::max_colors] = 
     {
         create_palette(31, 0, 0),   // Red
         create_palette(0, 31, 0),   // Green
         create_palette(0, 0, 31),   // Blue
         create_palette(31, 0, 31),  // Purple
         create_palette(31, 16, 0),  // Orange
+        create_palette(31, 31, 31),  // White (Wildcard)
     };
     //auto red_palette_ptr = create_palette(31, 0, 0);
 
-    for (int r = 0; r < rows; r++)
+    for (int r = 0; r < board::rows; r++)
     {
-        for (int c = 0; c < cols; c++)
+        for (int c = 0; c < board::cols; c++)
         {
-            auto val = rand.get_int(max_colors);
-            gems[r][c] = (gem_color)val;
+            auto val = rand.get_int(board::max_colors);
+            b.gems[r][c] = (gem_type)val;
         }
     }
 
-    for (int r = 0; r < rows; r++)
+    for (int r = 0; r < board::rows; r++)
     {
-        for (int c = 0; c < cols; c++)
+        for (int c = 0; c < board::cols; c++)
         {
             auto x = (30 * c) - 100;
             auto y = (30 * r) - 60;
             positions[r][c] = bn::fixed_point(x, y);
             auto gem_sprite = bn::sprite_items::gem.create_sprite(x, y);
-            auto palette_index = (int)gems[r][c];
+            auto palette_index = (int)b.gems[r][c];
             auto palette = colors[palette_index];
             gem_sprite.set_palette(palette);
 
@@ -257,7 +235,7 @@ int main()
         }
     }
 
-    bn::list<anim_slide, total_gems> slides;
+    bn::list<anim_slide, board::total_gems> slides;
 
     while (true)
     {
@@ -280,7 +258,7 @@ int main()
             {
                 move_col = -1;
             }
-            else if (bn::keypad::right_pressed() && sel_col < cols - 1)
+            else if (bn::keypad::right_pressed() && sel_col < board::cols - 1)
             {
                 move_col = +1;
             }
@@ -288,29 +266,60 @@ int main()
             {
                 move_row = -1;
             }
-            else if (bn::keypad::down_pressed() && sel_row < rows - 1)
+            else if (bn::keypad::down_pressed() && sel_row < board::rows - 1)
             {
                 move_row = +1;
             }
 
             if (move_row != 0 || move_col != 0)
             {
-                auto current_gem = gems[sel_row][sel_col];
-                auto target_gem = gems[sel_row + move_row][sel_col + move_col];
-                gems[sel_row][sel_col] = target_gem;
-                gems[sel_row + move_row][sel_col + move_col] = current_gem;
+                auto current_gem = b.gems[sel_row][sel_col];
+                auto target_gem = b.gems[sel_row + move_row][sel_col + move_col];
+                b.gems[sel_row][sel_col] = target_gem;
+                b.gems[sel_row + move_row][sel_col + move_col] = current_gem;
 
-                auto current_gem_sprite = gem_sprites[(sel_row * cols) + sel_col];
+                auto current_gem_sprite = gem_sprites[(sel_row * board::cols) + sel_col];
                 //auto current_gem_to_pos = points[sel_row + move_row][sel_col + move_col];
                 //auto current_gem_action = bn::sprite_move_to_action(current_gem_sprite, 60, current_gem_to_pos);
                 //move_actions.push_back(current_gem_action);
                 slides.push_back(anim_slide(sel_row, sel_col, sel_row + move_row, sel_col + move_col, current_gem_sprite));
 
-                auto target_gem_sprite = gem_sprites[((sel_row + move_row) * cols) + (sel_col + move_col)];
+                auto target_gem_sprite = gem_sprites[((sel_row + move_row) * board::cols) + (sel_col + move_col)];
                 //auto target_gem_to_pos = points[sel_row][sel_col];
                 //auto target_gem_action = bn::sprite_move_to_action(target_gem_sprite, 60, target_gem_to_pos);
                 //move_actions.push_back(target_gem_action);
                 slides.push_back(anim_slide(sel_row + move_row, sel_col + move_col, sel_row, sel_col, target_gem_sprite));
+
+                auto matches = b.get_matches(b.gems[sel_row], board::cols);
+                BN_LOG("Matches found: ", matches.size());
+                if (matches.size() > 0)
+                {
+                    for (int match_index = 0; match_index < matches.size(); match_index++)
+                    {
+                        bn::string<64> string;
+                        bn::ostringstream string_stream(string);
+                        string_stream.append("Match: ");
+                        string_stream.append(match_index);
+                        string_stream.append(" indices: ");
+
+                        for (int i = 0; i < matches[match_index].size(); i++)
+                        {
+                            auto val = matches[match_index][i];
+                            string_stream.append(val);
+                            
+                            if (i == matches[match_index].size() - 1)
+                            {
+                                string_stream.append(".");
+                            }
+                            else
+                            {
+                                string_stream.append(", ");
+                            }
+                        }
+                        
+                        BN_LOG(string_stream.view());
+                    }
+                }
             }
         }
         else
@@ -319,7 +328,7 @@ int main()
             {
                 sel_col -= 1;
             }
-            else if (bn::keypad::right_pressed() && sel_col < cols - 1)
+            else if (bn::keypad::right_pressed() && sel_col < board::cols - 1)
             {
                 sel_col += 1;
             }
@@ -328,7 +337,7 @@ int main()
             {
                 sel_row -= 1;
             }
-            else if (bn::keypad::down_pressed() && sel_row < rows - 1)
+            else if (bn::keypad::down_pressed() && sel_row < board::rows - 1)
             {
                 sel_row += 1;
             }
@@ -336,12 +345,12 @@ int main()
 
         if (bn::keypad::start_pressed())
         {
-            for (int r = 0; r < rows; r++)
+            for (int r = 0; r < board::rows; r++)
             {
-                for (int c = 0; c < cols; c++)
+                for (int c = 0; c < board::cols; c++)
                 {
-                    auto gem_sprite = gem_sprites[(r * cols) + c];
-                    slides.push_back(anim_slide(r - rows, c, r, c, gem_sprite));
+                    auto gem_sprite = gem_sprites[(r * board::cols) + c];
+                    slides.push_back(anim_slide(r - board::rows, c, r, c, gem_sprite));
                 }
             }
         }
@@ -378,7 +387,7 @@ int main()
         while (it != end)
         {
             auto done = it->action.done();
-            BN_LOG("Processing tween index: ", i, ". Done: ", done);
+            //BN_LOG("Processing tween index: ", i, ". Done: ", done);
 
             if (done == false)
             {
@@ -392,14 +401,14 @@ int main()
 
                 // If the row is negative then determine its actual starting position.
                 // TODO: This isn't gonna work once we have gem matching and breaking, add 2 extra properties to anim_slide.
-                auto from_row = it->from_row < 0 ? it->from_row + rows : it->from_row;
+                auto from_row = it->from_row < 0 ? it->from_row + board::rows : it->from_row;
 
                 // Don't expect negative cols at the moment.
                 //auto from_col = it->from_col < 0 ? it->from_col + cols : it->from_col;
                 auto from_col = it->from_col;
 
                 sprite.set_position(positions[from_row][from_col]);
-                auto gem_type = gems[from_row][from_col];
+                auto gem_type = b.gems[from_row][from_col];
                 auto palette = colors[(int)gem_type];
                 sprite.set_palette(palette);
 
@@ -410,7 +419,7 @@ int main()
             i++;
         }
 
-        BN_LOG("slides size: ", slides.size());
+        //BN_LOG("slides size: ", slides.size());
 
         //i = i + 1;
         //auto istr = bn::to_string<16>(i);

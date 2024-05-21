@@ -167,8 +167,6 @@ int main()
     bn::core::init();
     BN_LOG("INIT!");
 
-    auto current_time = bn::time::current();
-    auto rand = bn::seed_random(current_time.has_value());
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
     bool animating = false; // Is an animation currently playing out.
@@ -184,9 +182,7 @@ int main()
 
     //auto mi = bn::music_item(0);
     //mi.play(0.5);
-    bn::music_items::cyberrid.play(0.05);
-
-    int i = 0;
+    //bn::music_items::cyberrid.play(0.05);
 
     auto spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
     
@@ -198,6 +194,7 @@ int main()
     //}
     //auto span = bn::span<bn::color>(reds);
     //auto red_palette = bn::sprite_palette_item(span, bn::bpp_mode::BPP_4);
+    b.new_board();
     bn::sprite_palette_ptr colors[board::max_colors] = 
     {
         create_palette(31, 0, 0),   // Red
@@ -213,15 +210,6 @@ int main()
     {
         for (int c = 0; c < board::cols; c++)
         {
-            auto val = rand.get_int(board::max_colors);
-            b.gems[r][c] = (gem_type)val;
-        }
-    }
-
-    for (int r = 0; r < board::rows; r++)
-    {
-        for (int c = 0; c < board::cols; c++)
-        {
             auto x = (30 * c) - 100;
             auto y = (30 * r) - 60;
             positions[r][c] = bn::fixed_point(x, y);
@@ -231,7 +219,7 @@ int main()
             gem_sprite.set_palette(palette);
 
             gem_sprites.push_back(gem_sprite);
-            BN_LOG("Made gem c: ", r, " r: ", c);
+            BN_LOG("Made gem r: ", r, " c: ", c);
         }
     }
 
@@ -290,35 +278,36 @@ int main()
                 //move_actions.push_back(target_gem_action);
                 slides.push_back(anim_slide(sel_row + move_row, sel_col + move_col, sel_row, sel_col, target_gem_sprite));
 
-                auto matches = b.get_matches(b.gems[sel_row], board::cols);
+                // TODO: Optimise to only check for matches in altered rows/cols.
+                auto matches = b.get_all_matches();
                 BN_LOG("Matches found: ", matches.size());
-                if (matches.size() > 0)
+                for (int match_index = 0; match_index < matches.size(); ++match_index)
                 {
-                    for (int match_index = 0; match_index < matches.size(); match_index++)
-                    {
-                        bn::string<64> string;
-                        bn::ostringstream string_stream(string);
-                        string_stream.append("Match: ");
-                        string_stream.append(match_index);
-                        string_stream.append(" indices: ");
+                    bn::string<64> string;
+                    bn::ostringstream string_stream(string);
+                    string_stream.append("\tMatch: ");
+                    string_stream.append(match_index);
+                    string_stream.append(" indices: ");
 
-                        for (int i = 0; i < matches[match_index].size(); i++)
-                        {
-                            auto val = matches[match_index][i];
-                            string_stream.append(val);
-                            
-                            if (i == matches[match_index].size() - 1)
-                            {
-                                string_stream.append(".");
-                            }
-                            else
-                            {
-                                string_stream.append(", ");
-                            }
-                        }
+                    auto match = matches[match_index];
+                    for (int i = 0; i < match.positions.size(); ++i)
+                    {
+                        auto position = match.positions[i];
+                        string_stream.append(position.row);
+                        string_stream.append(",");
+                        string_stream.append(position.col);
                         
-                        BN_LOG(string_stream.view());
+                        if (i == match.positions.size() - 1)
+                        {
+                            string_stream.append(".");
+                        }
+                        else
+                        {
+                            string_stream.append(", ");
+                        }
                     }
+                    
+                    BN_LOG(string_stream.view());
                 }
             }
         }

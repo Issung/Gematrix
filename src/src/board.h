@@ -14,41 +14,140 @@ enum class gem_type
     Wildcard
 };
 
+class match_position
+{
+public:
+    int row;
+    int col;
+
+    match_position(int row, int col) : row(row), col(col)
+    {
+
+    }
+};
+
+class match
+{
+public:
+    static const int match_max_length = 5;
+    bn::vector<match_position, match_max_length> positions;
+
+    match(bn::vector<match_position, match_max_length> positions) : positions(positions)
+    {
+
+    }
+};
+
 class board
 {
 public: // Public fields
     static const int rows = 5;
     static const int cols = 6;
+    static const int row_length = cols;
+    static const int col_length = rows;
     static const int total_gems = rows * cols; // Total gems on the board (rows * cols).
     static const int max_colors = 6;   // The amount of colors.
     gem_type gems[rows][cols];
 private:    // Private fields
     bn::random rand = bn::random();
     static const int match_max_length = 5;
-public:
+public: 
     void new_board()
     {
         for (int r = 0; r < board::rows; r++)
         {
             for (int c = 0; c < board::cols; c++)
             {
-                auto val = rand.get_int(board::max_colors);
+                auto val = rand.get_int(board::max_colors - 1); // TODO: No wildcards for now
                 gems[r][c] = (gem_type)val;
             }
         }
     }
 
-    // Return a list of lists of indexes of matches.
-    //bn::vector<bn::vector<int, 5>, 2> get_matches(bn::ivector<gem_type>& row)
-    bn::vector<bn::vector<int, 5>, 2> get_matches(gem_type row[], int length)
+    // Find all matches on the board.
+    bn::vector<match, 20> get_all_matches()
     {
-        auto matches = bn::vector<bn::vector<int, 5>, 2>();    // Max of 2 matches.
-        auto currentSequence = bn::vector<gem_type, 5>();   // Maximum match length is 5(?).
+        int r[rows] { 0, 1, 2, 3, 4 };
+        int c[cols] { 0, 1, 2, 3, 4, 5 };
+        return get_matches_in(r, rows, c, cols);
+    }
+
+    // Find matches in provided row and match indices.
+    bn::vector<match, 20> get_matches_in(
+        int row_indices[], int rows_length, // Indices of rows to check.
+        int col_indices[], int cols_length  // Indices of cols to check.
+    )
+    {
+        auto matches = bn::vector<match, 20>();
+
+        for (int i = 0; i < rows_length; ++i)
+        {
+            auto row_index = row_indices[i];
+            auto row = gems[row_index];
+            auto matches_in_row = get_matches_in_sequence(row, row_length);
+
+            for (int match_index = 0; match_index < matches_in_row.size(); ++match_index)
+            {
+                auto positions = bn::vector<match_position, match_max_length>();
+
+                for (int position_index = 0; position_index < matches_in_row[match_index].size(); ++position_index)
+                {
+                    positions.push_back(match_position(row_index, matches_in_row[match_index][position_index]));
+                }
+
+                matches.push_back(match(positions));
+            }
+        }
+
+        for (int i = 0; i < cols_length; ++i)
+        {
+            auto col = col_indices[i];
+            gem_type col_gems[col_length];
+
+            // Build a "row" array from the column.
+            for (int j = 0; j < col_length; ++j)
+            {
+                col_gems[j] = gems[j][col];
+            }
+
+            auto matches_in_col = get_matches_in_sequence(col_gems, col_length);
+
+            for (int match_index = 0; match_index < matches_in_col.size(); ++match_index)
+            {
+                auto positions = bn::vector<match_position, match_max_length>();
+
+                for (int position_index = 0; position_index < matches_in_col[match_index].size(); ++position_index)
+                {
+                    positions.push_back(match_position(matches_in_col[match_index][position_index], col));
+                }
+
+                matches.push_back(match(positions));
+            }
+        }
+
+        return matches;
+    }
+
+    // The max length of a sequence is the length of a maximum match + 1 because the sequence will then be broken.
+    // E.g. [BBBBBG] (5 blues starting from the left and one green, the sequence will be broken and [BBBBB] will be returned.)
+    static const int max_sequence_length = match_max_length + 1;
+
+    // The maximum amount of matches that can occur in a sequence.
+    // Rows are the longest. E.g. in a row (length 6) [BBBGGG].
+    static const int max_matches_in_a_sequence = 2;
+    
+    // Return a list of lists of indexes of matches.
+    // bn::vector<bn::vector<int, 5>, 2> get_matches(bn::ivector<gem_type>& row)
+    // TODO: Move to be private.
+    bn::vector<bn::vector<int, max_sequence_length>, max_matches_in_a_sequence> get_matches_in_sequence(gem_type row[], int length)
+    {
+        auto matches = bn::vector<bn::vector<int, max_sequence_length>, max_matches_in_a_sequence>();
+        auto currentSequence = bn::vector<gem_type, max_sequence_length>();
         //auto length = row.size();
 
         for (int i = 0; i < length; i++)
         {
-            auto lastSequence = bn::vector<gem_type, 5>(currentSequence);   // Copy the current sequence before we modify it.
+            auto lastSequence = bn::vector<gem_type, max_sequence_length>(currentSequence);   // Copy the current sequence before we modify it.
             bool sequenceCouldMatch = sequence_can_match(lastSequence);
             bool sequenceHadMatch = sequence_is_match(lastSequence);
 
@@ -148,9 +247,10 @@ private:
     //bn::ivector<int> range(int start, int count)
     bn::vector<int, match_max_length> range(int start, int count)
     {
+        BN_ASSERT(count != 6, "A range should never be made of length 6. Maximum possible match is ", match_max_length);
         auto list = bn::vector<int, match_max_length>();
 
-        for (int i = start; i < start+count; ++i)
+        for (int i = start; i < start + count; ++i)
         {
             list.push_back(i);
         }

@@ -4,20 +4,10 @@
 #include "bn_vector.h"
 #include "bn_random.h"
 #include "match.h"
+#include "gem_type.h"
 
 #define match_collection bn::vector<match, 20>
 #define gem_drops_collection bn::vector<gem_drop, board::total_gems>
-
-enum class gem_type : uint8_t
-{
-    Red,
-    Green,
-    Blue,
-    Purple,
-    Orange,
-    Wildcard,
-    Empty,
-};
 
 class gem_drop
 {
@@ -62,6 +52,11 @@ private:    // Private fields
         return (gem_type)rand.get_int(board::max_colors - 1); // TODO: No wildcards for now
     }
 public: 
+    board()
+    {
+        new_board();
+    }
+
     void new_board()
     {
         for (int r = 0; r < board::rows; r++)
@@ -70,6 +65,7 @@ public:
             {
                 auto val = gen_new_gem();
                 gems[r][c] = val;
+                BN_LOG("Generated gem ", r, ",", c, ": ", (uint8_t)val);
             }
         }
     }

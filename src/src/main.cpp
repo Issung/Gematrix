@@ -86,12 +86,12 @@ public:
     bn::sprite_move_to_action action;
 
     anim_slide(
-        int from_row, int from_col,
-        int to_row, int to_col,
+        int _from_row, int _from_col,
+        int _to_row, int _to_col,
         bn::sprite_ptr sprite
     ) : 
-        from_row(from_row), from_col(from_col),
-        to_row(to_row), to_col(to_col),
+        from_row(_from_row), from_col(_from_col),
+        to_row(_to_row), to_col(_to_col),
         action(
             determine_sprite(sprite, from_row, from_col),
             determine_distance(from_row, from_col, to_row, to_col),
@@ -107,8 +107,8 @@ public:
 
         sprite.set_position(from);
 
-        auto debug_distance = determine_distance(from_row, from_col, to_row, to_col);
-        auto dbg_to = determine_to_position(to_row, to_col);
+        //auto debug_distance = determine_distance(from_row, from_col, to_row, to_col);
+        //auto dbg_to = determine_to_position(to_row, to_col);
         //BN_LOG("Created slide for ", from_row, ",", from_col, " to ", to_row, ",", to_col, ". Distance: ", debug_distance);
         //BN_LOG("Created slide for ", from.x(), ",", from.y(), " to ", dbg_to.x(), ",", dbg_to.y());
     }
@@ -141,6 +141,9 @@ private:
     }
 };
 
+board b = board();
+bn::vector<bn::sprite_ptr, board::total_gems> gem_sprites;
+
 namespace
 {
     // Restricted to 4bit color depth for now.
@@ -158,9 +161,22 @@ namespace
         auto palette_ptr = palette.create_palette();
         return palette_ptr;
     }
-}
 
-board b = board();
+    void redraw_all_gems(bn::sprite_palette_ptr colors[])   // TODO: I don't wanna have to pass colors around all the time.
+    {
+        for (int r = 0; r < board::rows; r++)
+        {
+            for (int c = 0; c < board::cols; c++)
+            {
+                auto gem_sprite = gem_sprites[(r * board::cols) + c];
+                auto gem_value = b.gems[r][c];
+                auto palette = colors[(uint8_t)gem_value];
+                gem_sprite.set_palette(palette);
+                gem_sprite.set_visible(true);
+            }
+        }
+    }
+}
 
 int main()
 {
@@ -169,7 +185,8 @@ int main()
 
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
-    bool animating = false; // Is an animation currently playing out.
+    auto last_move_matches = match_collection();
+    //bool animating = false; // Is an animation currently playing out.
 
     bn::bg_palettes::set_transparent_color(bn::color(0, 0, 0));
 
@@ -178,23 +195,15 @@ int main()
     text_generator.set_left_alignment();
     bn::vector<bn::sprite_ptr, 32> text_sprites;
     text_generator.generate(+70, -70, "SCORE", text_sprites);   // TODO: Fix Y position to align with gems border when added.
-    bn::vector<bn::sprite_ptr, board::total_gems> gem_sprites;
 
     //auto mi = bn::music_item(0);
     //mi.play(0.5);
     //bn::music_items::cyberrid.play(0.05);
 
     auto spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
-    
-    //auto red = bn::color(31, 0, 0);
-    //bn::color reds[16];
-    //for (int i = 0; i < 16; i++)
-    //{
-    //    reds[i] = red;
-    //}
-    //auto span = bn::span<bn::color>(reds);
-    //auto red_palette = bn::sprite_palette_item(span, bn::bpp_mode::BPP_4);
     b.new_board();
+
+    // TODO: Empty color.
     bn::sprite_palette_ptr colors[board::max_colors] = 
     {
         create_palette(31, 0, 0),   // Red
@@ -204,7 +213,6 @@ int main()
         create_palette(31, 16, 0),  // Orange
         create_palette(31, 31, 31),  // White (Wildcard)
     };
-    //auto red_palette_ptr = create_palette(31, 0, 0);
 
     for (int r = 0; r < board::rows; r++)
     {
@@ -214,7 +222,7 @@ int main()
             auto y = (30 * r) - 60;
             positions[r][c] = bn::fixed_point(x, y);
             auto gem_sprite = bn::sprite_items::gem.create_sprite(x, y);
-            auto palette_index = (int)b.gems[r][c];
+            auto palette_index = (uint8_t)b.gems[r][c];
             auto palette = colors[palette_index];
             gem_sprite.set_palette(palette);
 
@@ -267,21 +275,15 @@ int main()
                 b.gems[sel_row + move_row][sel_col + move_col] = current_gem;
 
                 auto current_gem_sprite = gem_sprites[(sel_row * board::cols) + sel_col];
-                //auto current_gem_to_pos = points[sel_row + move_row][sel_col + move_col];
-                //auto current_gem_action = bn::sprite_move_to_action(current_gem_sprite, 60, current_gem_to_pos);
-                //move_actions.push_back(current_gem_action);
                 slides.push_back(anim_slide(sel_row, sel_col, sel_row + move_row, sel_col + move_col, current_gem_sprite));
 
                 auto target_gem_sprite = gem_sprites[((sel_row + move_row) * board::cols) + (sel_col + move_col)];
-                //auto target_gem_to_pos = points[sel_row][sel_col];
-                //auto target_gem_action = bn::sprite_move_to_action(target_gem_sprite, 60, target_gem_to_pos);
-                //move_actions.push_back(target_gem_action);
                 slides.push_back(anim_slide(sel_row + move_row, sel_col + move_col, sel_row, sel_col, target_gem_sprite));
 
                 // TODO: Optimise to only check for matches in altered rows/cols.
-                auto matches = b.get_all_matches();
-                BN_LOG("Matches found: ", matches.size());
-                for (int match_index = 0; match_index < matches.size(); ++match_index)
+                last_move_matches = b.delete_matches();
+                BN_LOG("Matches found: ", last_move_matches.size());
+                for (int match_index = 0; match_index < last_move_matches.size(); ++match_index)
                 {
                     bn::string<64> string;
                     bn::ostringstream string_stream(string);
@@ -289,10 +291,11 @@ int main()
                     string_stream.append(match_index);
                     string_stream.append(" indices: ");
 
-                    auto match = matches[match_index];
+                    auto match = last_move_matches[match_index];
                     for (int i = 0; i < match.positions.size(); ++i)
                     {
                         auto position = match.positions[i];
+
                         string_stream.append(position.row);
                         string_stream.append(",");
                         string_stream.append(position.col);
@@ -347,19 +350,6 @@ int main()
         auto selector_point = positions[sel_row][sel_col];
         spr_selector.set_position(selector_point);
 
-        // Update all gem palettes.
-        // TODO: Temporary for now, is not needed every frame.
-        //for (int r = 0; r < rows; r++)
-        //{
-        //    for (int c = 0; c < cols; c++)
-        //    {
-        //        auto gem_sprite = gem_sprites[(r * cols) + c];
-        //        auto gem_value = gems[r][c];
-        //        auto palette = colors[(int)gem_value];
-        //        gem_sprite.set_palette(palette);
-        //    }
-        //}
-
         //for (int i = 0; i < tweens.size(); i++)
         //{
         //    // TODO: This will break if some remove themselves during this loop.
@@ -373,6 +363,7 @@ int main()
         auto it = slides.begin();
         auto end = slides.end();
         auto i = 0;
+        bool didErase = false;
         while (it != end)
         {
             auto done = it->action.done();
@@ -398,14 +389,32 @@ int main()
 
                 sprite.set_position(positions[from_row][from_col]);
                 auto gem_type = b.gems[from_row][from_col];
-                auto palette = colors[(int)gem_type];
+                auto palette = colors[(uint8_t)gem_type];
                 sprite.set_palette(palette);
 
                 // Remove from list.
                 it = slides.erase(it);
+                didErase = true;
             }
 
             i++;
+        }
+
+        // When sliding animations complete and there are matches then erase the gems & matches.
+        if (didErase && last_move_matches.size() > 0)
+        {
+            for (auto m : last_move_matches)
+            {
+                for (auto pos : m.positions)
+                {
+                    gem_sprites[(pos.row * board::cols) + pos.col].set_visible(false);
+                }
+            }
+
+            last_move_matches.clear();
+            b.drop_gems();
+            //b.spawn_new_gems();
+            redraw_all_gems(colors);
         }
 
         //BN_LOG("slides size: ", slides.size());

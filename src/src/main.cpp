@@ -77,19 +77,27 @@ bn::fixed_point positions[board::rows][board::cols]; // The point of each drawn 
 
 //bn::list<tween, 32> tweens;
 
+// TODO: Change all of these to int8_t.
 class anim_slide {
 public:
+    // These are needed for slide animations that come from offscreen so we can reset the sprite back to its original position.
+    int spr_row;
+    int spr_col;
+
     int from_row;
     int from_col;
+
     int to_row;
     int to_col;
     bn::sprite_move_to_action action;
 
     anim_slide(
+        int _spr_row, int _spr_col,
         int _from_row, int _from_col,
         int _to_row, int _to_col,
         bn::sprite_ptr sprite
     ) : 
+        spr_row(_spr_row), spr_col(_spr_col),
         from_row(_from_row), from_col(_from_col),
         to_row(_to_row), to_col(_to_col),
         action(
@@ -170,9 +178,17 @@ namespace
             {
                 auto gem_sprite = gem_sprites[(r * board::cols) + c];
                 auto gem_value = b.gems[r][c];
-                auto palette = colors[(uint8_t)gem_value];
-                gem_sprite.set_palette(palette);
-                gem_sprite.set_visible(true);
+
+                if (gem_value == gem_type::Empty)
+                {
+                    gem_sprite.set_visible(false);
+                }
+                else
+                {
+                    auto palette = colors[(uint8_t)gem_value];
+                    gem_sprite.set_palette(palette);
+                    gem_sprite.set_visible(true);
+                }
             }
         }
     }
@@ -275,10 +291,10 @@ int main()
                 b.gems[sel_row + move_row][sel_col + move_col] = current_gem;
 
                 auto current_gem_sprite = gem_sprites[(sel_row * board::cols) + sel_col];
-                slides.push_back(anim_slide(sel_row, sel_col, sel_row + move_row, sel_col + move_col, current_gem_sprite));
+                slides.push_back(anim_slide(sel_row, sel_col, sel_row, sel_col, sel_row + move_row, sel_col + move_col, current_gem_sprite));
 
                 auto target_gem_sprite = gem_sprites[((sel_row + move_row) * board::cols) + (sel_col + move_col)];
-                slides.push_back(anim_slide(sel_row + move_row, sel_col + move_col, sel_row, sel_col, target_gem_sprite));
+                slides.push_back(anim_slide(sel_row + move_row, sel_col + move_col, sel_row + move_row, sel_col + move_col, sel_row, sel_col, target_gem_sprite));
 
                 // TODO: Optimise to only check for matches in altered rows/cols.
                 last_move_matches = b.delete_matches();
@@ -342,7 +358,7 @@ int main()
                 for (int c = 0; c < board::cols; c++)
                 {
                     auto gem_sprite = gem_sprites[(r * board::cols) + c];
-                    slides.push_back(anim_slide(r - board::rows, c, r, c, gem_sprite));
+                    slides.push_back(anim_slide(r, c, r - board::rows, c, r, c, gem_sprite));
                 }
             }
         }
@@ -387,10 +403,18 @@ int main()
                 //auto from_col = it->from_col < 0 ? it->from_col + cols : it->from_col;
                 auto from_col = it->from_col;
 
-                sprite.set_position(positions[from_row][from_col]);
-                auto gem_type = b.gems[from_row][from_col];
-                auto palette = colors[(uint8_t)gem_type];
-                sprite.set_palette(palette);
+                sprite.set_position(positions[it->spr_row][it->spr_col]);
+                auto gem_type = b.gems[it->spr_row][it->spr_col];
+                if (gem_type == gem_type::Empty)    // TODO: Stop duplicating this logic from redraw_all_gems.
+                {
+                    sprite.set_visible(false);
+                }
+                else
+                {
+                    auto palette = colors[(uint8_t)gem_type];
+                    sprite.set_palette(palette);
+                    sprite.set_visible(true);
+                }
 
                 // Remove from list.
                 it = slides.erase(it);
@@ -401,20 +425,33 @@ int main()
         }
 
         // When sliding animations complete and there are matches then erase the gems & matches.
-        if (didErase && last_move_matches.size() > 0)
+        if (didErase && slides.size() == 0)
         {
-            for (auto m : last_move_matches)
+            redraw_all_gems(colors);
+
+            if (last_move_matches.size() > 0)
             {
-                for (auto pos : m.positions)
+                for (auto m : last_move_matches)
                 {
-                    gem_sprites[(pos.row * board::cols) + pos.col].set_visible(false);
+                    for (auto pos : m.positions)
+                    {
+                        gem_sprites[(pos.row * board::cols) + pos.col].set_visible(false);
+                    }
+                }
+
+                last_move_matches.clear();
+                auto drops = b.drop_gems();
+
+                // Create animation for each drop.
+                for (auto drop : drops)
+                {
+                    auto spr = gem_sprites[(drop.row * board::cols) + drop.col];
+                    slides.push_back(anim_slide(drop.row, drop.col, drop.from_row, drop.col, drop.to_row, drop.col, spr));
                 }
             }
 
-            last_move_matches.clear();
-            b.drop_gems();
             //b.spawn_new_gems();
-            redraw_all_gems(colors);
+            //redraw_all_gems(colors);
         }
 
         //BN_LOG("slides size: ", slides.size());

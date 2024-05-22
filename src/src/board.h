@@ -23,12 +23,12 @@ class gem_drop
 {
 public:
     // Which sprite to use:
-    uint8_t row;
-    uint8_t col;
+    int8_t row;
+    int8_t col;
 
     // Anim info:
-    uint8_t from_row;
-    uint8_t to_row;
+    int8_t from_row;
+    int8_t to_row;
 
     gem_type type;
 
@@ -100,7 +100,7 @@ public:
             {
                 if (gems[row][col] == gem_type::Empty)
                 {
-                    // Find the nearest non-empty gem above the empty spot
+                    // Find the nearest non-empty gem above the empty spot.
                     for (int searchRow = row - 1; searchRow >= 0; --searchRow)
                     {
                         if (gems[searchRow][col] != gem_type::Empty)
@@ -108,7 +108,7 @@ public:
                             // Move the found gem down to the empty spot
                             gems[row][col] = gems[searchRow][col];
                             gems[searchRow][col] = gem_type::Empty;
-                            drops.push_back(gem_drop(row, col, row, searchRow, gems[row][col]));
+                            drops.push_back(gem_drop(searchRow, col, searchRow, row, gems[searchRow][col]));
                             break;
                         }
                     }

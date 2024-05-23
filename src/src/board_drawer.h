@@ -1,6 +1,7 @@
 #ifndef BOARD_DRAWER
 #define BOARD_DRAWER
 
+#include "bn_core.h"
 #include "bn_log.h"
 #include "bn_sprite_items_gem.h"
 #include "bn_sprite_palette_item.h"
@@ -29,10 +30,6 @@ public:
 // TODO: Change all of these to int8_t.
 class anim_slide {
 public:
-    // These are needed for slide animations that come from offscreen so we can reset the sprite back to its original position.
-    int spr_row;
-    int spr_col;
-
     int from_row;
     int from_col;
 
@@ -40,33 +37,29 @@ public:
     int to_col;
     bn::sprite_move_to_action action;
 
+    // Gem will be grabbed from `_to_row, _to_col`, color changed and moved to the `_from_row, _from_col` position, slid back 
+    // to its `_to_row, _to_col` position.
+    // Do everything so that when the animation ends, the sprite is where it needs to be with no further alterations.
     anim_slide(
-        int _spr_row, int _spr_col,
         int _from_row, int _from_col,
         int _to_row, int _to_col,
-        bn::sprite_ptr sprite
-    ) : 
-        spr_row(_spr_row), spr_col(_spr_col),
-        from_row(_from_row), from_col(_from_col),
+        bn::sprite_ptr sprite,  // The sprite from _to_row, _to_col.
+        bn::sprite_palette_ptr palette,  // The new palette for the gem at _to_row, _to_col.
+        bool visible
+    ) : from_row(_from_row), from_col(_from_col),
         to_row(_to_row), to_col(_to_col),
         action(
             determine_sprite(sprite, from_row, from_col),
-            determine_distance(from_row, from_col, to_row, to_col),
+            determine_duration(from_row, from_col, to_row, to_col),
             determine_to_position(to_row, to_col)
         )
     {
-        auto from = positions[bn::max(from_row, 0)][from_col];
+        sprite.set_visible(visible);
+        sprite.set_palette(palette);
 
-        if (from_row < 0)
-        {
-            from = bn::fixed_point(from.x(), from.y() + (30 * from_row));
-        }
-
-        sprite.set_position(from);
-
-        //auto debug_distance = determine_distance(from_row, from_col, to_row, to_col);
+        auto debug_distance = determine_duration(from_row, from_col, to_row, to_col) / 10;
         //auto dbg_to = determine_to_position(to_row, to_col);
-        //BN_LOG("Created slide for ", from_row, ",", from_col, " to ", to_row, ",", to_col, ". Distance: ", debug_distance);
+        BN_LOG("Created slide for ", from_row, ",", from_col, " to ", to_row, ",", to_col, ". Distance: ", debug_distance);
         //BN_LOG("Created slide for ", from.x(), ",", from.y(), " to ", dbg_to.x(), ",", dbg_to.y());
     }
     
@@ -85,10 +78,11 @@ private:
         return sprite;
     }
 
-    static int determine_distance(int from_row, int from_col, int to_row, int to_col)
+    static int determine_duration(int from_row, int from_col, int to_row, int to_col)
     {
-        auto distance = bn::abs((from_row - to_row) + (from_col - to_col)) * 10;
-        return distance;
+        constexpr int framesPerSquare = 10;
+        auto distance = bn::abs((from_row - to_row) + (from_col - to_col));
+        return bn::max(distance * framesPerSquare, 1);  // Setting a duration of 0 causes error, use min of 1.
     }
 
     static bn::fixed_point determine_to_position(int to_row, int to_col)
@@ -157,13 +151,14 @@ public:
     }
 
     void slide(
-        int spr_row, int spr_col,
         int from_row, int from_col,
         int to_row, int to_col
     )
     {
-        auto current_gem_sprite = gem_sprites[(spr_row * board::cols) + spr_col];
-        slides.push_back(anim_slide(spr_row, spr_col, from_row, from_col, to_row, to_col, current_gem_sprite));
+        auto current_gem_sprite = gem_sprites[(to_row * board::cols) + to_col];
+        auto type = b.gems[to_row][to_col];
+        auto palette = colors[(int)type];
+        slides.push_back(anim_slide(from_row, from_col, to_row, to_col, current_gem_sprite, palette, type != gem_type::Empty));
     }
 
     void play_matches(match_collection& matches)
@@ -182,8 +177,9 @@ public:
         // Create animation for each drop.
         for (auto drop : drops)
         {
-            auto spr = gem_sprites[(drop.row * board::cols) + drop.col];
-            slides.push_back(anim_slide(drop.row, drop.col, drop.from_row, drop.col, drop.to_row, drop.col, spr));
+            auto spr = gem_sprites[(drop.to_row * board::cols) + drop.col];
+            auto palette = colors[(uint8_t)drop.type];
+            slides.push_back(anim_slide(drop.from_row, drop.col, drop.to_row, drop.col, spr, palette, drop.type != gem_type::Empty));
         }
     }
 
@@ -206,21 +202,6 @@ public:
             }
             else
             {
-                // Reset gem pos & palette.
-                auto sprite = it->action.sprite();
-                sprite.set_position(positions[it->spr_row][it->spr_col]);
-                auto gem_type = b.gems[it->spr_row][it->spr_col];
-                if (gem_type == gem_type::Empty)    // TODO: Stop duplicating this logic from redraw_all_gems.
-                {
-                    sprite.set_visible(false);
-                }
-                else
-                {
-                    auto palette = colors[(uint8_t)gem_type];
-                    sprite.set_palette(palette);
-                    sprite.set_visible(true);
-                }
-
                 // Remove from list.
                 it = slides.erase(it);
                 didErase = true;

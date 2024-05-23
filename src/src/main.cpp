@@ -92,8 +92,8 @@ int main()
                 b.gems[sel_row][sel_col] = target_gem;
                 b.gems[sel_row + move_row][sel_col + move_col] = current_gem;
 
-                bd.slide(sel_row, sel_col, sel_row, sel_col, sel_row + move_row, sel_col + move_col);
-                bd.slide(sel_row + move_row, sel_col + move_col, sel_row + move_row, sel_col + move_col, sel_row, sel_col);
+                bd.slide(sel_row, sel_col, sel_row + move_row, sel_col + move_col);
+                bd.slide(sel_row + move_row, sel_col + move_col, sel_row, sel_col);
 
                 // TODO: Optimise to only check for matches in altered rows/cols.
                 last_move_matches = b.delete_matches();
@@ -173,8 +173,9 @@ int main()
                 bd.play_matches(last_move_matches);
             }
             else
-            {
-                bd.redraw_all_gems();
+            {   
+                // Do nothing for now, so we can make sure all the slide animations are working properly.
+                //bd.redraw_all_gems();
             }
         }
         bn::core::update();

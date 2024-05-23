@@ -12,21 +12,17 @@
 class gem_drop
 {
 public:
-    // Which sprite to use:
-    int8_t row;
     int8_t col;
-
-    // Anim info:
     int8_t from_row;
     int8_t to_row;
 
     gem_type type;
 
     gem_drop(
-        uint8_t _row, uint8_t _col,
-        uint8_t _from_row, uint8_t _to_row,
+        int8_t _col,
+        int8_t _from_row, int8_t _to_row,
         gem_type _type
-    ) : row(_row), col(_col),
+    ) : col(_col),
         from_row(_from_row), to_row(_to_row),
         type(_type)
     {
@@ -85,17 +81,23 @@ public:
         return matches;
     }
 
-    // TODO: For columns with empty spots and no gems above, generate new ones.
+    // "Drop" gems into empty spots, and generate new gems for empty spots at the top.
+    // Returns a list of drops that were performed.
     gem_drops_collection drop_gems()
     {
         auto drops = gem_drops_collection();
 
         for (int col = 0; col < cols; ++col)
         {
+            // Track how many new gems are created in each column for determining the drop height of new gems.
+            int newGemsInCol = 0;
+
             for (int row = rows - 1; row >= 0; --row)
             {
                 if (gems[row][col] == gem_type::Empty)
                 {
+                    auto didPullGemDown = false;
+                    
                     // Find the nearest non-empty gem above the empty spot.
                     for (int searchRow = row - 1; searchRow >= 0; --searchRow)
                     {
@@ -104,12 +106,23 @@ public:
                             // Move the found gem down to the empty spot
                             gems[row][col] = gems[searchRow][col];
                             gems[searchRow][col] = gem_type::Empty;
-                            drops.push_back(gem_drop(searchRow, col, searchRow, row, gems[searchRow][col]));
+                            
+                            // Create a drop record.
+                            drops.push_back(gem_drop(col, searchRow, row, gems[row][col]));
+                            didPullGemDown = true;
                             break;
                         }
                     }
 
-                    // TODO: If no gem dropped by now, generate new one.
+                    // No gem was able to be pulled down, we need to generate a new one.
+                    if (!didPullGemDown)
+                    {
+                        newGemsInCol += 1;
+
+                        auto new_gem_type = gen_new_gem();
+                        gems[row][col] = new_gem_type;
+                        drops.push_back(gem_drop(col, -newGemsInCol, row, new_gem_type));
+                    }
                 }
             }
         }

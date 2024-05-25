@@ -106,11 +106,10 @@ private:
     static constexpr bn::fixed target = bn::fixed(0.02);
     static constexpr int frames = 10;
 
-    bn::sprite_scale_to_action create_action(bn::sprite_ptr sprite)
+    static bn::sprite_scale_to_action create_action(bn::sprite_ptr& sprite)
     {
         sprite.set_scale(1);
-        action = bn::sprite_scale_to_action(sprite, frames, target);
-        return action;
+        return bn::sprite_scale_to_action(sprite, frames, target);
     }
 public:
     bn::sprite_scale_to_action action;
@@ -118,7 +117,7 @@ public:
     // Gem will be grabbed from `_to_row, _to_col`, color changed and moved to the `_from_row, _from_col` position, slid back 
     // to its `_to_row, _to_col` position.
     // Do everything so that when the animation ends, the sprite is where it needs to be with no further alterations.
-    anim_destroy(bn::sprite_ptr sprite) : action(create_action(sprite))
+    anim_destroy(bn::sprite_ptr& sprite) : action(create_action(sprite))
     {
         
     }

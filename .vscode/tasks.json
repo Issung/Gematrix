@@ -8,7 +8,7 @@
             "type": "shell",
             "command": "make",
             "args": [
-                "-j16"
+                "-j24"
             ],
             "options": {
                 "cwd": "./src"

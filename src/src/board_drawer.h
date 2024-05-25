@@ -82,6 +82,7 @@ private:
             from = bn::fixed_point(from.x(), from.y() + (30 * from_row));
         }
 
+        sprite.set_scale(1);
         sprite.set_position(from);
         return sprite;
     }
@@ -97,6 +98,29 @@ private:
     {
         auto position = positions[to_row][to_col];
         return position;
+    }
+};
+
+class anim_destroy {
+private:
+    static constexpr bn::fixed target = bn::fixed(0.02);
+    static constexpr int frames = 10;
+
+    bn::sprite_scale_to_action create_action(bn::sprite_ptr sprite)
+    {
+        sprite.set_scale(1);
+        action = bn::sprite_scale_to_action(sprite, frames, target);
+        return action;
+    }
+public:
+    bn::sprite_scale_to_action action;
+
+    // Gem will be grabbed from `_to_row, _to_col`, color changed and moved to the `_from_row, _from_col` position, slid back 
+    // to its `_to_row, _to_col` position.
+    // Do everything so that when the animation ends, the sprite is where it needs to be with no further alterations.
+    anim_destroy(bn::sprite_ptr sprite) : action(create_action(sprite))
+    {
+        
     }
 };
 
@@ -125,6 +149,7 @@ private:
     board& b;
     bn::vector<bn::sprite_ptr, board::total_gems> gem_sprites;  // Each gem sprite, can be accessed with `(row * board::cols) + col`.
     bn::list<anim_slide, board::total_gems> slides;
+    bn::list<anim_destroy, board::total_gems> destroys;
     // Move to ROM to avoid ram usage. https://gvaliente.github.io/butano/faq.html
     const bn::sprite_palette_ptr colors[board::max_colors] =
     {
@@ -205,7 +230,8 @@ public:
             {
                 for (auto pos : m.positions)
                 {
-                    gem_sprites[(pos.row * board::cols) + pos.col].set_visible(false);
+                    auto sprite = gem_sprites[(pos.row * board::cols) + pos.col];
+                    destroys.push_back(anim_destroy(sprite));
                 }
             }
 
@@ -229,10 +255,16 @@ public:
     // Returns true if animations are complete.
     bool update()
     {
+        animate_slides();
+        animate_destroys();
+
+        return slides.size() == 0 && destroys.size() == 0;
+    }
+private:
+    void animate_slides()
+    {
         auto it = slides.begin();
         auto end = slides.end();
-        auto i = 0;
-        bool didErase = false;
         while (it != end)
         {
             auto done = it->action.done();
@@ -247,34 +279,28 @@ public:
             {
                 // Remove from list.
                 it = slides.erase(it);
-                didErase = true;
             }
-
-            i++;
         }
-
-        return slides.size() == 0;
     }
 
-    void redraw_all_gems()
+    void animate_destroys()
     {
-        for (int r = 0; r < board::rows; ++r)
+        auto it = destroys.begin();
+        auto end = destroys.end();
+        while (it != end)
         {
-            for (int c = 0; c < board::cols; ++c)
-            {
-                auto gem_sprite = gem_sprites[(r * board::cols) + c];
-                auto gem_value = b.gems[r][c];
+            auto done = it->action.done();
+            //BN_LOG("Processing tween index: ", i, ". Done: ", done);
 
-                if (gem_value == gem_type::Empty)
-                {
-                    gem_sprite.set_visible(false);
-                }
-                else
-                {
-                    auto palette = colors[(uint8_t)gem_value];
-                    gem_sprite.set_palette(palette);
-                    gem_sprite.set_visible(true);
-                }
+            if (done == false)
+            {
+                it->action.update();
+                ++it;
+            }
+            else
+            {
+                // Remove from list.
+                it = destroys.erase(it);
             }
         }
     }

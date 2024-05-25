@@ -223,15 +223,25 @@ public:
         }
         else
         {
-            // TODO: Actually implement animations for destroying, probably just a shrink animation for now?
             current_state = drawer_state::DestroyingMatches;
+
+            bool created_animation_positions[board::rows][board::cols] = {};    // {} initialises all values to false.
 
             for (auto m : matches)
             {
                 for (auto pos : m.positions)
                 {
-                    auto sprite = gem_sprites[(pos.row * board::cols) + pos.col];
-                    destroys.push_back(anim_destroy(sprite));
+                    // If we haven't already created a animation for the gem at this position.
+                    // This could happen if a single gem is used within 2 matches.
+                    if (!created_animation_positions[pos.row][pos.col])
+                    {
+                        // Create animation.
+                        bn::sprite_ptr& sprite = gem_sprites[(pos.row * board::cols) + pos.col];
+                        destroys.push_back(anim_destroy(sprite));
+                        
+                        // Mark the position as true so no more animations are created for it.
+                        created_animation_positions[pos.row][pos.col] = true;
+                    }
                 }
             }
 

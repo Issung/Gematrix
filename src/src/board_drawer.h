@@ -27,6 +27,14 @@ public:
     anim_type type;
 };*/
 
+enum drawer_state
+{
+    Waiting,    // Waiting for player input.
+    PlayingSlide,  // Animating the player's input.
+    DestroyingMatches, // Animating matches being destroyed.
+    DroppingGems,   // Animating gems dropping.
+};
+
 // TODO: Change all of these to int8_t.
 class anim_slide {
 public:
@@ -117,6 +125,7 @@ private:
     board& b;
     bn::vector<bn::sprite_ptr, board::total_gems> gem_sprites;  // Each gem sprite, can be accessed with `(row * board::cols) + col`.
     bn::list<anim_slide, board::total_gems> slides;
+    // Move to ROM to avoid ram usage. https://gvaliente.github.io/butano/faq.html
     const bn::sprite_palette_ptr colors[board::max_colors] =
     {
         create_palette(31, 0, 0),   // Red
@@ -124,9 +133,10 @@ private:
         create_palette(0, 0, 31),   // Blue
         create_palette(31, 0, 31),  // Purple
         create_palette(31, 16, 0),  // Orange
-        create_palette(31, 31, 31),  // White (Wildcard)
+        create_palette(31, 31, 31), // White (Wildcard)
         // No color for empty at the moment, just make the sprite invisible.
     };
+    drawer_state current_state;
 public:
     board_drawer(board& _b) : b(_b)
     {
@@ -150,29 +160,62 @@ public:
         BN_LOG("Finished constructing board_drawer.");
     }
 
-    void slide(
-        int from_row, int from_col,
-        int to_row, int to_col
-    )
+    drawer_state state()
     {
-        auto current_gem_sprite = gem_sprites[(to_row * board::cols) + to_col];
-        auto type = b.gems[to_row][to_col];
-        auto palette = colors[(int)type];
-        slides.push_back(anim_slide(from_row, from_col, to_row, to_col, current_gem_sprite, palette, type != gem_type::Empty));
+        return current_state;
     }
 
+    bool animating()
+    {
+        return slides.size() > 0;
+    }
+
+    // Slide gems between row/col A and row/col B.
+    void slide(
+        int row_a, int col_a,
+        int row_b, int col_b
+    )
+    {
+        current_state = drawer_state::PlayingSlide;
+
+        auto sprite_a = gem_sprites[(row_a * board::cols) + col_a];
+        auto type_a = b.gems[row_a][col_a];
+        auto palette_a = colors[(int)type_a];
+        slides.push_back(anim_slide(row_b, col_b, row_a, col_a, sprite_a, palette_a, type_a != gem_type::Empty));
+
+        auto sprite_b = gem_sprites[(row_b * board::cols) + col_b];
+        auto type_b = b.gems[row_b][col_b];
+        auto palette_b = colors[(int)type_b];
+        slides.push_back(anim_slide(row_a, col_a, row_b, col_b, sprite_b, palette_b, type_b != gem_type::Empty));
+    }
+
+    // Alters state, to either be waiting or destroying matches depending if there was any.
     void play_matches(match_collection& matches)
     {
-        for (auto m : matches)
+        if (matches.size() == 0)
         {
-            for (auto pos : m.positions)
-            {
-                gem_sprites[(pos.row * board::cols) + pos.col].set_visible(false);
-            }
+            current_state = drawer_state::Waiting;
         }
+        else
+        {
+            // TODO: Actually implement animations for destroying, probably just a shrink animation for now?
+            current_state = drawer_state::DestroyingMatches;
 
-        matches.clear();
-        auto drops = b.drop_gems();
+            for (auto m : matches)
+            {
+                for (auto pos : m.positions)
+                {
+                    gem_sprites[(pos.row * board::cols) + pos.col].set_visible(false);
+                }
+            }
+
+            matches.clear();
+        }
+    }
+
+    void play_drops(gem_drops_collection& drops)
+    {
+        current_state = drawer_state::DroppingGems;
 
         // Create animation for each drop.
         for (auto drop : drops)

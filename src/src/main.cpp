@@ -55,7 +55,7 @@ int main()
     //mi.play(0.5);
     //bn::music_items::cyberrid.play(0.05);
 
-    match_collection last_move_matches;
+    //match_collection last_move_matches;
 
     auto spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
 
@@ -86,18 +86,19 @@ int main()
 
             if (move_row != 0 || move_col != 0)
             {
-                // TODO: Implement a swap method on board and swap anim on board_drawer.
+                // TODO: Implement a swap method on board.
                 auto current_gem = b.gems[sel_row][sel_col];
                 auto target_gem = b.gems[sel_row + move_row][sel_col + move_col];
                 b.gems[sel_row][sel_col] = target_gem;
                 b.gems[sel_row + move_row][sel_col + move_col] = current_gem;
 
                 bd.slide(sel_row, sel_col, sel_row + move_row, sel_col + move_col);
-                bd.slide(sel_row + move_row, sel_col + move_col, sel_row, sel_col);
 
                 // TODO: Optimise to only check for matches in altered rows/cols.
-                last_move_matches = b.delete_matches();
-                BN_LOG("Matches found: ", last_move_matches.size());
+                //auto matches = b.delete_matches();
+                //bd.play_matches(matches);
+                
+                /*BN_LOG("Matches found: ", last_move_matches.size());
                 for (int match_index = 0; match_index < last_move_matches.size(); ++match_index)
                 {
                     bn::string<64> string;
@@ -126,7 +127,7 @@ int main()
                     }
                     
                     BN_LOG(string_stream.view());
-                }
+                }*/
             }
         }
         else
@@ -166,16 +167,28 @@ int main()
         auto selector_point = positions[sel_row][sel_col];
         spr_selector.set_position(selector_point);
 
-        if (bd.update())
+        auto animations_complete = bd.update();
+        if (animations_complete)
         {
-            if (last_move_matches.size() > 0)
+            // When the drawer says the animations are complete, the state variable is whatever it
+            // was last animation, by knowing what it was was last animation we can tell what animations just completed.
+            // Then we can decide what to do next.
+            auto state = bd.state();
+
+            // When a slide or gem drops complete, delete matches again.
+            if (state == drawer_state::PlayingSlide || state == drawer_state::DroppingGems)
             {
-                bd.play_matches(last_move_matches);
+                auto matches = b.delete_matches();
+                bd.play_matches(matches);
             }
-            else
-            {   
-                // Do nothing for now, so we can make sure all the slide animations are working properly.
-                //bd.redraw_all_gems();
+            if (state == drawer_state::DestroyingMatches)
+            {
+                auto drops = b.drop_gems();
+                bd.play_drops(drops);
+            }
+            else // Waiting?
+            {
+                // Player is allowed to input again?
             }
         }
         bn::core::update();

@@ -28,6 +28,7 @@ AUDIO       :=  audio
 ROMTITLE    :=  GBAJAM
 ROMCODE     :=  SBTP
 USERFLAGS   :=
+STACKTRACE  :=  true
 
 #---------------------------------------------------------------------------------------------------------------------
 # Export absolute butano path:

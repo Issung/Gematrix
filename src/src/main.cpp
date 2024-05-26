@@ -58,9 +58,13 @@ int main()
     //match_collection last_move_matches;
 
     auto spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
+    auto active_palette = spr_selector.palette();
+    auto inactive_palette = create_palette(16, 16, 16);
+    bool animating = false;
 
     while (true)
     {
+        // If A is held then prevent selector movement.
         if (bn::keypad::a_held())
         {
             int move_row = 0;
@@ -84,7 +88,8 @@ int main()
                 move_row = +1;
             }
 
-            if (move_row != 0 || move_col != 0)
+            // Only execute swap if the board isn't currently animating.
+            if (!animating && (move_row != 0 || move_col != 0))
             {
                 // TODO: Implement a swap method on board.
                 auto current_gem = b.gems[sel_row][sel_col];
@@ -166,6 +171,7 @@ int main()
 
         auto selector_point = positions[sel_row][sel_col];
         spr_selector.set_position(selector_point);
+        spr_selector.set_palette(animating ? inactive_palette : active_palette);
 
         auto animations_complete = bd.update();
         if (animations_complete)
@@ -181,16 +187,21 @@ int main()
                 auto matches = b.delete_matches();
                 bd.play_matches(matches);
             }
-            if (state == drawer_state::DestroyingMatches)
+            else if (state == drawer_state::DestroyingMatches)
             {
                 auto drops = b.drop_gems();
                 bd.play_drops(drops);
             }
-            else // Waiting?
+            else // State switches to `Waiting` wen play_matches() is called with an empty list.
             {
-                // Player is allowed to input again?
+                animating = false;
             }
         }
+        else
+        {
+            animating = true;
+        }
+
         bn::core::update();
     }
 }

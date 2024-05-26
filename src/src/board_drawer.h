@@ -213,7 +213,9 @@ public:
         slides.push_back(anim_slide(row_a, col_a, row_b, col_b, sprite_b, palette_b, type_b != gem_type::Empty));
     }
 
-    // Alters state, to either be waiting or destroying matches depending if there was any.
+    // Alters state, to either be:
+    // - `Waiting` (for player input) if matches is empty.
+    // - `DestroyingMatches` if there was atleast one match to be animated.
     void play_matches(match_collection& matches)
     {
         if (matches.size() == 0)
@@ -248,8 +250,11 @@ public:
         }
     }
 
+    // Animate a collection of drops. Alters state to `DroppingGems`.
     void play_drops(gem_drops_collection& drops)
     {
+        BN_ASSERT(drops.size() > 0, "play_drops function should never be given an empty collection.");
+
         current_state = drawer_state::DroppingGems;
 
         // Create animation for each drop.

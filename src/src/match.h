@@ -18,7 +18,8 @@ public:
 class match
 {
 public:
-    static constexpr int MAX_LENGTH = 5;
+    // Maximum length of a match.
+    static constexpr int MAX_LENGTH = 6;
     bn::vector<match_position, MAX_LENGTH> positions;
 
     match(bn::vector<match_position, MAX_LENGTH> new_positions) : positions(new_positions)

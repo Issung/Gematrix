@@ -333,7 +333,7 @@ private:
 
     bn::vector<int, match::MAX_LENGTH> range(int start, int count)
     {
-        BN_ASSERT(count != 6, "A range should never be made of length 6. Maximum possible match is ", match::MAX_LENGTH);
+        BN_ASSERT(count <= match::MAX_LENGTH, "A range should never be made of length greater than ", match::MAX_LENGTH);
         auto list = bn::vector<int, match::MAX_LENGTH>();
 
         for (int i = start; i < start + count; ++i)

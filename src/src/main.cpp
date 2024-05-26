@@ -187,6 +187,7 @@ int main()
                 auto matches = b.delete_matches();
                 bd.play_matches(matches);
             }
+            // After matches are destroyed, drop gems.
             else if (state == drawer_state::DestroyingMatches)
             {
                 auto drops = b.drop_gems();

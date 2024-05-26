@@ -66,6 +66,15 @@ public:
         }
     }
 
+    void swap(int row_a, int col_a, int row_b, int col_b)
+    {
+        auto gem_a = gems[row_a][col_a];
+        auto gem_b = gems[row_b][col_b];
+        gems[row_a][col_a] = gem_b;
+        gems[row_b][col_b] = gem_a;
+    }
+
+    // TODO: If we're deleting matches after a swap we can optimise by only checking rows/columns affected by the swap.
     match_collection delete_matches()
     {
         match_collection matches = get_all_matches();

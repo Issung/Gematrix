@@ -1,4 +1,4 @@
-Scrap pieces of code
+_Scrap pieces of code_
 
 void redraw_all_gems()
 {
@@ -22,3 +22,40 @@ void redraw_all_gems()
         }
     }
 }
+
+LOGGING FOR MATCHES FOUND.
+
+// TODO: Optimise to only check for matches in altered rows/cols.
+//auto matches = b.delete_matches();
+//bd.play_matches(matches);
+
+/*BN_LOG("Matches found: ", last_move_matches.size());
+for (int match_index = 0; match_index < last_move_matches.size(); ++match_index)
+{
+    bn::string<64> string;
+    bn::ostringstream string_stream(string);
+    string_stream.append("\tMatch: ");
+    string_stream.append(match_index);
+    string_stream.append(" indices: ");
+
+    auto match = last_move_matches[match_index];
+    for (int i = 0; i < match.positions.size(); ++i)
+    {
+        auto position = match.positions[i];
+
+        string_stream.append(position.row);
+        string_stream.append(",");
+        string_stream.append(position.col);
+        
+        if (i == match.positions.size() - 1)
+        {
+            string_stream.append(".");
+        }
+        else
+        {
+            string_stream.append(", ");
+        }
+    }
+    
+    BN_LOG(string_stream.view());
+}*/

@@ -91,48 +91,8 @@ int main()
             // Only execute swap if the board isn't currently animating.
             if (!animating && (move_row != 0 || move_col != 0))
             {
-                // TODO: Implement a swap method on board.
-                auto current_gem = b.gems[sel_row][sel_col];
-                auto target_gem = b.gems[sel_row + move_row][sel_col + move_col];
-                b.gems[sel_row][sel_col] = target_gem;
-                b.gems[sel_row + move_row][sel_col + move_col] = current_gem;
-
+                b.swap(sel_row, sel_col, sel_row + move_row, sel_col + move_col);
                 bd.slide(sel_row, sel_col, sel_row + move_row, sel_col + move_col);
-
-                // TODO: Optimise to only check for matches in altered rows/cols.
-                //auto matches = b.delete_matches();
-                //bd.play_matches(matches);
-                
-                /*BN_LOG("Matches found: ", last_move_matches.size());
-                for (int match_index = 0; match_index < last_move_matches.size(); ++match_index)
-                {
-                    bn::string<64> string;
-                    bn::ostringstream string_stream(string);
-                    string_stream.append("\tMatch: ");
-                    string_stream.append(match_index);
-                    string_stream.append(" indices: ");
-
-                    auto match = last_move_matches[match_index];
-                    for (int i = 0; i < match.positions.size(); ++i)
-                    {
-                        auto position = match.positions[i];
-
-                        string_stream.append(position.row);
-                        string_stream.append(",");
-                        string_stream.append(position.col);
-                        
-                        if (i == match.positions.size() - 1)
-                        {
-                            string_stream.append(".");
-                        }
-                        else
-                        {
-                            string_stream.append(", ");
-                        }
-                    }
-                    
-                    BN_LOG(string_stream.view());
-                }*/
             }
         }
         else

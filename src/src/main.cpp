@@ -46,10 +46,18 @@ int main()
 
     bn::bg_palettes::set_transparent_color(bn::color(0, 0, 0));
 
-    bn::vector<bn::sprite_ptr, 32> text_sprites;
     bn::sprite_text_generator text_generator(gj::fixed_32x64_sprite_font);
+
+    bn::vector<bn::sprite_ptr, 32> score_text_sprites;
     text_generator.set_left_alignment();
-    text_generator.generate(+70, -70, "SCORE", text_sprites);   // TODO: Fix Y position to align with gems border when added.
+    text_generator.generate(+70, -70, "SCORE", score_text_sprites);   // TODO: Fix Y position to align with gems border when added.
+
+    int score = 0;
+    int displayed_score = 0;
+    bool displayed_score_bump = false;  // Bump the score display Y every frame it increments.
+    bn::vector<bn::sprite_ptr, 32> score_number_sprites;
+    text_generator.set_right_alignment();
+    text_generator.generate(+115, -55, bn::to_string<32>(score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
 
     //auto mi = bn::music_item(0);
     //mi.play(0.5);
@@ -145,6 +153,12 @@ int main()
             if (state == drawer_state::PlayingSlide || state == drawer_state::DroppingGems)
             {
                 auto matches = b.delete_matches();
+
+                for (auto m : matches)
+                {
+                    score += m.positions.size();
+                }
+
                 bd.play_matches(matches);
             }
             // After matches are destroyed, drop gems.
@@ -163,6 +177,20 @@ int main()
             animating = true;
         }
 
+        if (displayed_score < score)
+        {
+            displayed_score_bump = !displayed_score_bump;
+            ++displayed_score;
+        }
+        else
+        {
+            displayed_score_bump = false;
+        }
+
+        // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
+        // 6 characters can fit, before overflowing onto the game board.
+        score_number_sprites.clear();
+        text_generator.generate(+116, -55 - (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
         bn::core::update();
     }
 }

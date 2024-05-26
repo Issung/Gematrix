@@ -246,6 +246,7 @@ public:
                 }
             }
 
+            // TODO: Is this necessary?
             matches.clear();
         }
     }

@@ -30,6 +30,7 @@ public:
     }
 };
 
+// Class responsible for handling board logic.
 class board
 {
 public: // Public fields
@@ -53,6 +54,8 @@ public:
         new_board();
     }
 
+    // TODO: Return collection of gem drops and get board_drawer to animate it.
+    // TODO: Generate a board that has no pre-existing matches.
     void new_board()
     {
         for (int r = 0; r < board::rows; r++)

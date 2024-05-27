@@ -56,6 +56,7 @@ int main()
     int displayed_score = 0;
     bool displayed_score_bump = false;  // Bump the score display Y every frame it increments.
     bn::vector<bn::sprite_ptr, 32> score_number_sprites;
+    bn::vector<bn::sprite_ptr, 4> combo_text_sprites;
     text_generator.set_right_alignment();
     text_generator.generate(+115, -55, bn::to_string<32>(score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
 
@@ -69,6 +70,7 @@ int main()
     auto active_palette = spr_selector.palette();
     auto inactive_palette = create_palette(16, 16, 16);
     bool animating = false;
+    uint8_t combo = 1;
 
     while (true)
     {
@@ -156,10 +158,11 @@ int main()
 
                 for (auto m : matches)
                 {
-                    score += m.positions.size();
+                    score += m.positions.size() * combo;
                 }
 
                 bd.play_matches(matches);
+                combo += 1;
             }
             // After matches are destroyed, drop gems.
             else if (state == drawer_state::DestroyingMatches)
@@ -170,6 +173,7 @@ int main()
             else // State switches to `Waiting` wen play_matches() is called with an empty list.
             {
                 animating = false;
+                combo = 1;
             }
         }
         else
@@ -177,20 +181,23 @@ int main()
             animating = true;
         }
 
+        displayed_score_bump = false;
         if (displayed_score < score)
         {
-            displayed_score_bump = !displayed_score_bump;
             ++displayed_score;
         }
-        else
+        else if (!displayed_score_bump) // Equal
         {
-            displayed_score_bump = false;
+            displayed_score_bump = true;
         }
 
         // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
         // 6 characters can fit, before overflowing onto the game board.
         score_number_sprites.clear();
-        text_generator.generate(+116, -55 - (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
+        text_generator.generate(+116, -55 + (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
+
+        combo_text_sprites.clear();
+        text_generator.generate(+116, +55, bn::format<4>("x{}", combo), combo_text_sprites);
         bn::core::update();
     }
 }

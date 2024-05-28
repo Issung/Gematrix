@@ -42,7 +42,7 @@ private:
     board b;
     board_drawer bd = board_drawer(b);
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
-    bn::vector<bn::sprite_ptr, 32> score_text_sprites;
+    bn::vector<bn::sprite_ptr, 5> score_text_sprites;  // Text sprites that just say "SCORE".
     bn::vector<bn::sprite_ptr, 32> score_number_sprites;
     bn::vector<bn::sprite_ptr, 4> combo_text_sprites;
     bn::sprite_ptr spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
@@ -61,6 +61,23 @@ public:
         text_generator.set_left_alignment();
         text_generator.generate(+70, -70, "SCORE", score_text_sprites);   // TODO: Fix Y position to align with gems border when added.
         text_generator.set_right_alignment();
+    }
+
+    void hide()
+    {
+        for (auto s : score_text_sprites) { s.set_visible(false); }
+        score_number_sprites.clear();
+        combo_text_sprites.clear();
+
+        spr_selector.set_visible(false);
+        bd.hide();
+    }
+
+    void show()
+    {
+        for (auto s : score_text_sprites) { s.set_visible(true); }
+        spr_selector.set_visible(true);
+        bd.show();
     }
 
     void reset()

@@ -184,6 +184,28 @@ public:
         BN_LOG("Finished constructing board_drawer.");
     }
 
+    void hide()
+    {
+        for (int r = 0; r < board::rows; r++)
+        {
+            for (int c = 0; c < board::cols; c++)
+            {
+                gem_sprites[r * board::cols + c].set_visible(false);
+            }
+        }
+    }
+
+    void show()
+    {
+        for (int r = 0; r < board::rows; r++)
+        {
+            for (int c = 0; c < board::cols; c++)
+            {
+                gem_sprites[r * board::cols + c].set_visible(true);
+            }
+        }
+    }
+
     drawer_state state()
     {
         return current_state;

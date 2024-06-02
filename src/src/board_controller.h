@@ -87,6 +87,7 @@ public:
         combo = 1;
         animating = false;
         b.new_board();
+        bd.redraw_all_gems();   // TODO: Animate board dropping row-by-row.
     }
 
     void update()

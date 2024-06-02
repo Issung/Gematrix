@@ -297,6 +297,29 @@ public:
 
         return slides.size() == 0 && destroys.size() == 0;
     }
+
+    void redraw_all_gems()
+    {
+        for (int r = 0; r < board::rows; ++r)
+        {
+            for (int c = 0; c < board::cols; ++c)
+            {
+                auto gem_sprite = gem_sprites[(r * board::cols) + c];
+                auto gem_value = b.gems[r][c];
+
+                if (gem_value == gem_type::Empty)
+                {
+                    gem_sprite.set_visible(false);
+                }
+                else
+                {
+                    auto palette = colors[(uint8_t)gem_value];
+                    gem_sprite.set_palette(palette);
+                    gem_sprite.set_visible(true);
+                }
+            }
+        }
+    }
 private:
     void animate_slides()
     {

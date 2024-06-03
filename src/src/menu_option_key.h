@@ -8,8 +8,9 @@ enum menu_option_key
     settings,
 
     // Play Menu
-    sprint,
-    time_attack,
+    sprint,         // Race to X amount of points.
+    time_attack,    // How many points can be gotten in X amount of time.
+    survival,       // How long can you stay alive against a decreasing lifespan by gaining more points.
 
     // Pause Menu
     resume,

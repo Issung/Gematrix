@@ -16,13 +16,13 @@ private:
     bn::sprite_palette_ptr palette_highlight = gj::fixed_32x64_sprite_font.item().palette_item().create_palette();
     bn::sprite_palette_ptr palette_grey = create_palette(16, 16, 16);
     bn::vector<bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT>, MAX_OPTIONS_PER_SCREEN> menu_options_sprites;
-    menu<menu_option_key> main_menu = menu<menu_option_key>("GEMMA");    // TODO: Think of name for game.
-    menu<menu_option_key> play_menu = menu<menu_option_key>("PLAY", &main_menu);
-    menu<menu_option_key> pause_menu = menu<menu_option_key>("PAUSE");
-    menu<menu_option_key>* current_menu = &main_menu;
+    menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
+    menu play_menu = menu("PLAY", &main_menu);
+    menu pause_menu = menu("PAUSE");
+    menu* current_menu = &main_menu;
 
     // Set to `nullptr` to hide menu.
-    void change_menu(menu<menu_option_key>* new_menu)
+    void change_menu(menu* new_menu)
     {
         current_menu = new_menu;
         selected_index = 0;
@@ -173,6 +173,7 @@ public:
         
         play_menu.options.push_back(menu_option("SPRINT", menu_option_key::sprint));
         play_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::time_attack));
+        play_menu.options.push_back(menu_option("SURVIVAL", menu_option_key::survival));
 
         pause_menu.options.push_back(menu_option("RESUME", menu_option_key::resume));
         pause_menu.options.push_back(menu_option("RESTART", menu_option_key::restart));

@@ -100,6 +100,7 @@ private:
         {
             auto key = current_menu->options[selected_index].key;
             
+            // TODO: Pull this long if-else chain out into its own function.
             if (key == menu_option_key::play)
             {
                 change_menu(&play_menu);

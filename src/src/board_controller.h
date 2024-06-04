@@ -142,6 +142,10 @@ public:
             {
                 sel_row += 1;
             }
+            else if (bn::keypad::select_pressed())
+            {
+                bd.animate_drop_all_in_alternating_rows();
+            }
         }
 
         auto selector_point = positions[sel_row][sel_col];

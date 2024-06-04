@@ -37,13 +37,16 @@ enum drawer_state
 
 // TODO: Change all of these to int8_t.
 class anim_slide {
+private:
+    bn::sprite_move_to_action action;
 public:
     int from_row;
     int from_col;
 
     int to_row;
     int to_col;
-    bn::sprite_move_to_action action;
+
+    int frames_delay = 0;
 
     // Gem will be grabbed from `_to_row, _to_col`, color changed and moved to the `_from_row, _from_col` position, slid back 
     // to its `_to_row, _to_col` position.
@@ -57,9 +60,9 @@ public:
     ) : from_row(_from_row), from_col(_from_col),
         to_row(_to_row), to_col(_to_col),
         action(
-            determine_sprite(sprite, from_row, from_col),
-            determine_duration(from_row, from_col, to_row, to_col),
-            determine_to_position(to_row, to_col)
+            determine_sprite(sprite, _from_row, _from_col),
+            determine_duration(_from_row, _from_col, _to_row, _to_col),
+            determine_to_position(_to_row, _to_col)
         )
     {
         sprite.set_visible(visible);
@@ -71,6 +74,27 @@ public:
         //BN_LOG("Created slide for ", from.x(), ",", from.y(), " to ", dbg_to.x(), ",", dbg_to.y());
     }
     
+    // Returns true if done.
+    bool update()
+    {
+        auto done = action.done();
+
+        if (done == false)
+        {
+            if (frames_delay > 0)
+            {
+                frames_delay -= 1;
+            }
+            else
+            {
+                action.update();
+            }
+
+            return false;
+        }
+
+        return true;
+    }
 private:
     // Horrible hack that allows us to set the sprite's position before we construct the tween action.
     static bn::sprite_ptr determine_sprite(bn::sprite_ptr sprite, int from_row, int from_col)
@@ -298,6 +322,59 @@ public:
         return slides.size() == 0 && destroys.size() == 0;
     }
 
+    void animate_drop_all_in()
+    {
+        int delay = 0;
+
+        // TODO: Bottom row drop in from left-to-right, 2nd from bottom drop in from right-to-left, alternate up to top.
+        for (int row = board::rows - 1; row >= 0; --row)
+        {
+            for (int col = board::cols - 1; col >= 0; --col)
+            {
+                auto spr = gem_sprites[(row * board::cols) + col];
+                auto palette = colors[(uint8_t)b.gems[row][col]];
+                auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
+                slide.frames_delay = delay;
+                slides.push_back(slide);
+                delay += 3;
+            }
+        }
+    }
+
+    void animate_drop_all_in_alternating_rows()
+    {
+        int delay = 0;
+
+        // TODO: Bottom row drop in from left-to-right, 2nd from bottom drop in from right-to-left, alternate up to top.
+        for (int row = board::rows - 1; row >= 0; --row)
+        {
+            if (row % 2 == 0)
+            {
+                for (int col = board::cols - 1; col >= 0; --col)
+                {
+                    auto spr = gem_sprites[(row * board::cols) + col];
+                    auto palette = colors[(uint8_t)b.gems[row][col]];
+                    auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
+                    slide.frames_delay = delay;
+                    slides.push_back(slide);
+                    delay += 2;
+                }
+            }
+            else
+            {
+                for (int col = 0; col < board::cols; ++col)
+                {
+                    auto spr = gem_sprites[(row * board::cols) + col];
+                    auto palette = colors[(uint8_t)b.gems[row][col]];
+                    auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
+                    slide.frames_delay = delay;
+                    slides.push_back(slide);
+                    delay += 2;
+                }
+            }
+        }
+    }
+
     void redraw_all_gems()
     {
         for (int r = 0; r < board::rows; ++r)
@@ -327,12 +404,11 @@ private:
         auto end = slides.end();
         while (it != end)
         {
-            auto done = it->action.done();
+            auto done = it->update();
             //BN_LOG("Processing tween index: ", i, ". Done: ", done);
 
             if (done == false)
             {
-                it->action.update();
                 ++it;
             }
             else

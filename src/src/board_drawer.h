@@ -103,7 +103,7 @@ private:
 
         if (from_row < 0)
         {
-            from = bn::fixed_point(from.x(), from.y() + (30 * from_row));
+            from = bn::fixed_point(from.x(), (from.y() + (30 * from_row)) - 5); // Subtract an extra 5 pixels so gems start completely off screen.
         }
 
         sprite.set_scale(1);
@@ -185,6 +185,7 @@ private:
         // No color for empty at the moment, just make the sprite invisible.
     };
     drawer_state current_state;
+    bn::random rand = bn::random();
 public:
     board_drawer(board& _b) : b(_b)
     {
@@ -322,6 +323,20 @@ public:
         return slides.size() == 0 && destroys.size() == 0;
     }
 
+    void animate_random_drop_all_in()
+    {
+        // TestMethodHere
+
+        int i = rand.get_int(4);
+        if (i == 0) animate_drop_all_in();
+        else if (i == 1) animate_drop_all_in_alternating_rows();
+        else if (i == 2) animate_scattered_drop_all_in();
+        else if (i == 3) animate_scattered_drop_all_in_row_by_row();
+        else BN_ASSERT(false, "Invalid value for random all-drop-in animation.");
+    }
+
+    static constexpr int delay_between_each_gem_drop = 2;
+
     void animate_drop_all_in()
     {
         int delay = 0;
@@ -336,7 +351,7 @@ public:
                 auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
                 slide.frames_delay = delay;
                 slides.push_back(slide);
-                delay += 3;
+                delay += delay_between_each_gem_drop;
             }
         }
     }
@@ -345,31 +360,77 @@ public:
     {
         int delay = 0;
 
-        // TODO: Bottom row drop in from left-to-right, 2nd from bottom drop in from right-to-left, alternate up to top.
         for (int row = board::rows - 1; row >= 0; --row)
         {
-            if (row % 2 == 0)
+            auto even = row % 2 == 0;
+            for (int col = (even ? board::cols - 1 : 0); 
+                even ? col >= 0 : col < board::cols; 
+                even ? --col : ++col)
             {
-                for (int col = board::cols - 1; col >= 0; --col)
+                auto spr = gem_sprites[(row * board::cols) + col];
+                auto palette = colors[(uint8_t)b.gems[row][col]];
+                auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
+                slide.frames_delay = delay;
+                slides.push_back(slide);
+                delay += 2;
+            }
+        }
+    }
+
+    // Drop gems into random columns until full.
+    void animate_scattered_drop_all_in()
+    {
+        int total_slots = board::rows * board::cols;
+        bool filled[board::rows][board::cols] = {};
+        int filled_count = 0;
+
+        while (filled_count < total_slots)
+        {
+            int col = rand.get_int(board::cols);
+
+            for (int row = board::rows - 1; row >= 0; --row)
+            {
+                if (filled[row][col] == false)
                 {
                     auto spr = gem_sprites[(row * board::cols) + col];
                     auto palette = colors[(uint8_t)b.gems[row][col]];
                     auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
-                    slide.frames_delay = delay;
+                    slide.frames_delay = filled_count * delay_between_each_gem_drop;
                     slides.push_back(slide);
-                    delay += 2;
+
+                    filled[row][col] = true;
+                    filled_count += 1;
+                    break;
                 }
             }
-            else
+        }
+    }
+
+    // Drop gems into random columns until full.
+    void animate_scattered_drop_all_in_row_by_row()
+    {
+        int delay = 0;
+        
+        for (int row = board::rows - 1; row >= 0; --row)
+        {
+            bool filled[board::cols] = {};
+            int filled_count = 0;
+
+            while (filled_count < board::cols)
             {
-                for (int col = 0; col < board::cols; ++col)
+                int col = rand.get_int(board::cols);
+
+                if (filled[col] == false)
                 {
                     auto spr = gem_sprites[(row * board::cols) + col];
                     auto palette = colors[(uint8_t)b.gems[row][col]];
                     auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
                     slide.frames_delay = delay;
                     slides.push_back(slide);
-                    delay += 2;
+
+                    filled[col] = true;
+                    filled_count += 1;
+                    delay += delay_between_each_gem_drop;
                 }
             }
         }

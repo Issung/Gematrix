@@ -38,14 +38,14 @@ enum drawer_state
 // TODO: Change all of these to int8_t.
 class anim_slide {
 private:
-    bn::sprite_move_to_action action;
-public:
     int from_row;
     int from_col;
 
     int to_row;
     int to_col;
 
+    bn::sprite_move_to_action action;
+public:
     int frames_delay = 0;
 
     // Gem will be grabbed from `_to_row, _to_col`, color changed and moved to the `_from_row, _from_col` position, slid back 
@@ -69,8 +69,8 @@ public:
         sprite.set_palette(palette);
 
         auto debug_distance = determine_duration(from_row, from_col, to_row, to_col) / 10;
-        //auto dbg_to = determine_to_position(to_row, to_col);
         BN_LOG("Created slide for ", from_row, ",", from_col, " to ", to_row, ",", to_col, ". Distance: ", debug_distance);
+        //auto dbg_to = determine_to_position(to_row, to_col);
         //BN_LOG("Created slide for ", from.x(), ",", from.y(), " to ", dbg_to.x(), ",", dbg_to.y());
     }
     
@@ -97,13 +97,13 @@ public:
     }
 private:
     // Horrible hack that allows us to set the sprite's position before we construct the tween action.
-    static bn::sprite_ptr determine_sprite(bn::sprite_ptr sprite, int from_row, int from_col)
+    static bn::sprite_ptr determine_sprite(bn::sprite_ptr sprite, int _from_row, int _from_col)
     {
-        auto from = positions[bn::max(from_row, 0)][from_col];
+        auto from = positions[bn::max(_from_row, 0)][_from_col];
 
-        if (from_row < 0)
+        if (_from_row < 0)
         {
-            from = bn::fixed_point(from.x(), (from.y() + (30 * from_row)) - 5); // Subtract an extra 5 pixels so gems start completely off screen.
+            from = bn::fixed_point(from.x(), (from.y() + (30 * _from_row)) - 5); // Subtract an extra 5 pixels so gems start completely off screen.
         }
 
         sprite.set_scale(1);
@@ -111,16 +111,16 @@ private:
         return sprite;
     }
 
-    static int determine_duration(int from_row, int from_col, int to_row, int to_col)
+    static int determine_duration(int _from_row, int _from_col, int _to_row, int _to_col)
     {
         constexpr int framesPerSquare = 10;
-        auto distance = bn::abs((from_row - to_row) + (from_col - to_col));
+        auto distance = bn::abs((_from_row - _to_row) + (_from_col - _to_col));
         return bn::max(distance * framesPerSquare, 1);  // Setting a duration of 0 causes error, use min of 1.
     }
 
-    static bn::fixed_point determine_to_position(int to_row, int to_col)
+    static bn::fixed_point determine_to_position(int _to_row, int _to_col)
     {
-        auto position = positions[to_row][to_col];
+        auto position = positions[_to_row][_to_col];
         return position;
     }
 };

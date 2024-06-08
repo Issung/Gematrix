@@ -436,7 +436,27 @@ public:
         }
     }
 
-    void redraw_all_gems()
+    // Reset all animation state.
+    void reset()
+    {
+        slides.clear();
+        destroys.clear();
+
+        for (int r = 0; r < board::rows; ++r)
+        {
+            for (int c = 0; c < board::cols; ++c)
+            {
+                auto sprite = gem_sprites[(r * board::cols) + c];
+                sprite.set_position(positions[r][c]);
+                sprite.set_visible(true);
+            }
+        }
+
+        set_all_gems_palette();
+    }
+
+private:
+    void set_all_gems_palette()
     {
         for (int r = 0; r < board::rows; ++r)
         {
@@ -458,7 +478,7 @@ public:
             }
         }
     }
-private:
+    
     void animate_slides()
     {
         auto it = slides.begin();

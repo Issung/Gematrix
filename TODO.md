@@ -25,7 +25,9 @@
     * Match pitches increasing for combos
     * Score increasing sound
 * Juice
-    * Game start board drop-in animations
+    * ~~Game start board drop-in animations~~
+        * Add more variants
+        * Refactor code to have drop-in animations creation class that returns a 2d array of ints, representing the order for each gem to drop in.
     * +N floating text for matches
     * Screenshake for combos
     * Background animation / flashing

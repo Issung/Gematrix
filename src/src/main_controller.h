@@ -15,9 +15,12 @@ private:
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
     bn::sprite_palette_ptr palette_highlight = gj::fixed_32x64_sprite_font.item().palette_item().create_palette();
     bn::sprite_palette_ptr palette_grey = create_palette(16, 16, 16);
+    bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT> menu_title_sprites;
     bn::vector<bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT>, MAX_OPTIONS_PER_SCREEN> menu_options_sprites;
     menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
     menu play_menu = menu("PLAY", &main_menu);
+    menu ranks_menu = menu("RANKS", &main_menu);
+    menu settings_menu = menu("SETTINGS", &main_menu);
     menu pause_menu = menu("PAUSE");
     menu* current_menu = &main_menu;
 
@@ -29,6 +32,7 @@ private:
 
         if (new_menu == nullptr)
         {
+            menu_title_sprites.clear();
             for (auto o : menu_options_sprites)
             {
                 for (auto s : o)
@@ -39,13 +43,15 @@ private:
         }
         else
         {
-            // TODO: Draw menu title.
-            // TODO: Can optimise by only redrawing sprites when menu is different from last frame.
+            // Title
+            menu_title_sprites.clear();
+            text_generator.generate(0, -50, current_menu->title, menu_title_sprites);
+
+            // Options
             for (int i = 0; i < current_menu->options.max_size(); ++i)
             {
                 menu_options_sprites[i].clear();
             }
-
             for (int i = 0; i < current_menu->options.size(); ++i)
             {
                 text_generator.generate(0, -20 + (i * 20), current_menu->options[i].text, menu_options_sprites[i]);
@@ -100,16 +106,30 @@ private:
         {
             auto key = current_menu->options[selected_index].key;
             
-            // TODO: Pull this long if-else chain out into its own function.
+            // TODO: Pull this long if-else chain out into its own function/switch block.
+            
+            // MENU: MAIN
             if (key == menu_option_key::play)
             {
                 change_menu(&play_menu);
             }
+            else if (key == menu_option_key::ranks)
+            {
+                change_menu(&ranks_menu);
+            }
+            else if (key == menu_option_key::settings)
+            {
+                change_menu(&settings_menu);
+            }
+
+            // MENU: PLAY
             else if (key == menu_option_key::sprint)    // TODO: Make game modes do something different.
             {
                 bc.reset();
                 change_state(game_state::ingame);
             }
+
+            // MENU: PAUSE
             else if (key == menu_option_key::resume)
             {
                 change_state(game_state::ingame);

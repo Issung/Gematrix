@@ -15,7 +15,9 @@
     * Sprint variants
     * Time Attack
     * Survival
-* Titles at top of menus
+* ~~Titles at top of menus~~
+    * Bigger font?
+    * Animate title (wobble effect from examples)
 * Music
 * SFX
     * Swap sound

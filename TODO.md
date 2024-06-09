@@ -1,11 +1,18 @@
 # TODO
 * Think of game name
+* Add game start splash screen, with logos:
+    * GBAJam2024
+    * Butano
+    * Usenti
+    * SonOfGoran
+    * devkitPro
 * 321 Countdown to game start
 * Sprites
     * Gems
     * Game logo
     * ???
 * Wildcards?
+    * Use palette shift feature from examples?
 * ~~Don't generate board with matches~~
     * Optimise
 * Implement gamemodes

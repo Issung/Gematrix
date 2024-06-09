@@ -58,13 +58,22 @@ public:
     // TODO: Generate a board that has no pre-existing matches.
     void new_board()
     {
-        for (int r = 0; r < board::rows; r++)
+        while (true)
         {
-            for (int c = 0; c < board::cols; c++)
+            for (int r = 0; r < board::rows; r++)
             {
-                auto val = gen_new_gem();
-                gems[r][c] = val;
-                BN_LOG("Generated gem ", r, ",", c, ": ", (uint8_t)val);
+                for (int c = 0; c < board::cols; c++)
+                {
+                    auto val = gen_new_gem();
+                    gems[r][c] = val;
+                    BN_LOG("Generated gem ", r, ",", c, ": ", (uint8_t)val);
+                }
+            }
+
+            // OPTIMISATION: Can be improved by instead of regenerating the board, just replace the matches with random gems until the match is broken.
+            if (get_all_matches().size() == 0)
+            {
+                break;
             }
         }
     }

@@ -6,6 +6,8 @@
     * Game logo
     * ???
 * Wildcards?
+* ~~Don't generate board with matches~~
+    * Optimise
 * Implement gamemodes
     * Sprint
         * Variants (300 points, 1000 points, 5000 points)

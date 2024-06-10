@@ -96,10 +96,12 @@ private:
         if (bn::keypad::up_pressed() && selected_index > 0)
         {
             selected_index -= 1;
+            bn::sound_items::menu_up.play();
         }
         else if (bn::keypad::down_pressed() && selected_index < (current_menu->options.size() - 1))
         {
             selected_index += 1;
+            bn::sound_items::menu_down.play();
         }
         else if (bn::keypad::start_pressed() && state == game_state::paused)    // Start button shortcut for resume when paused.
         {
@@ -115,14 +117,17 @@ private:
             if (key == menu_option_key::play)
             {
                 change_menu(&play_menu);
+                bn::sound_items::menu_ok.play();
             }
             else if (key == menu_option_key::ranks)
             {
                 change_menu(&ranks_menu);
+                bn::sound_items::menu_ok.play();
             }
             else if (key == menu_option_key::settings)
             {
                 change_menu(&settings_menu);
+                bn::sound_items::menu_ok.play();
             }
 
             // MENU: PLAY
@@ -145,8 +150,9 @@ private:
             }
             else if (key == menu_option_key::quit)
             {
-                bn::music::stop();
                 change_state(game_state::menus);
+                bn::music::stop();
+                bn::sound_items::menu_ok.play();
             }
         }
         else if (bn::keypad::b_pressed())
@@ -154,6 +160,7 @@ private:
             if (current_menu->previous_menu != nullptr)
             {
                 change_menu(current_menu->previous_menu);
+                bn::sound_items::menu_back.play();
             }
         }
     }

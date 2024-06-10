@@ -42,7 +42,7 @@
 #include "bn_music_items.h"
 
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
-class board_controller
+class game_controller
 {
 private:
     board b;
@@ -66,7 +66,7 @@ private:
     int timer_frames = 0;   // Amount of update frames since last reset.
     bool animating = false;
 public: 
-    board_controller()
+    game_controller()
     {
         text_generator.set_left_alignment();
         text_generator.generate(+70, -70, "SCORE", score_text_sprites);   // TODO: Fix Y position to align with gems border when added.
@@ -138,7 +138,7 @@ public:
             else if (start_countdown_timer_frames == 1)
             {
                 bn::sound_items::countdown_finish_beep.play();
-                bn::music_items::cirno.play();
+                bn::music_items::cirno.play(0.25);
             }
 
             --start_countdown_timer_frames;
@@ -177,6 +177,7 @@ public:
             {
                 b.swap(sel_row, sel_col, sel_row + move_row, sel_col + move_col);
                 bd.slide(sel_row, sel_col, sel_row + move_row, sel_col + move_col);
+                bn::sound_items::slide.play();
             }
         }
         else
@@ -184,19 +185,23 @@ public:
             if (bn::keypad::left_pressed() && sel_col > 0)
             {
                 sel_col -= 1;
+                bn::sound_items::move_selector.play();
             }
             else if (bn::keypad::right_pressed() && sel_col < board::cols - 1)
             {
                 sel_col += 1;
+                bn::sound_items::move_selector.play();
             }
 
             if (bn::keypad::up_pressed() && sel_row > 0)
             {
                 sel_row -= 1;
+                bn::sound_items::move_selector.play();
             }
             else if (bn::keypad::down_pressed() && sel_row < board::rows - 1)
             {
                 sel_row += 1;
+                bn::sound_items::move_selector.play();
             }
             else if (bn::keypad::select_pressed())
             {
@@ -227,6 +232,7 @@ public:
                     // - Should each gem be worth worth its match size? E.g. A 4-of-a-kind each gem gives 4 points?
                     // - Should each match increase the combo rather than each play_matches?
                     score += m.positions.size() * combo;
+                    bn::sound_items::match.play();
                 }
 
                 bd.play_matches(matches);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "board_controller.h"
+#include "game_controller.h"
 #include "menu.h"
 #include "menu_option.h"
 #include "game_state.h"
@@ -9,7 +9,7 @@
 class main_controller
 {
 private:
-    board_controller bc;
+    game_controller bc;
     game_state state = game_state::menus;
     int selected_index = 0;
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);

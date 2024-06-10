@@ -69,11 +69,14 @@ private:
         }
         else if (state == game_state::paused)
         {
+            if (bn::music::playing()) bn::music::pause();
+            bn::sound_items::pause.play();
             bc.hide();
             change_menu(&pause_menu);
         }
         else if (state == game_state::ingame)
         {
+            if (bn::music::paused()) bn::music::resume();
             change_menu(nullptr);
             bc.show();
         }
@@ -136,11 +139,13 @@ private:
             }
             else if (key == menu_option_key::restart)
             {
+                bn::music::stop();
                 bc.reset();
                 change_state(game_state::ingame);
             }
             else if (key == menu_option_key::quit)
             {
+                bn::music::stop();
                 change_state(game_state::menus);
             }
         }

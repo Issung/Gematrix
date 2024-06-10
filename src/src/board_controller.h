@@ -18,6 +18,9 @@
 #include "bn_sprite_actions.h"
 #include "bn_sprite_items_gem.h"
 #include "bn_sprite_items_selector.h"
+#include "bn_sprite_items_one.h"
+#include "bn_sprite_items_two.h"
+#include "bn_sprite_items_three.h"
 #include "bn_sprite_palette_item.h"
 #include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_palettes.h"
@@ -33,7 +36,10 @@
 #include "board.h"
 #include "gem_type.h"
 #include "gj_big_sprite_font.h"
-#include "player.h"
+#include "bn_optional.h"
+#include "bn_sprite_affine_mat_ptr.h"
+#include <bn_sprite_double_size_mode.h>
+#include "bn_music_items.h"
 
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class board_controller
@@ -45,15 +51,19 @@ private:
     bn::vector<bn::sprite_ptr, 5> score_text_sprites;  // Text sprites that just say "SCORE".
     bn::vector<bn::sprite_ptr, 32> score_number_sprites;
     bn::vector<bn::sprite_ptr, 4> combo_text_sprites;
+    bn::vector<bn::sprite_ptr, 5> timer_sprites;
     bn::sprite_ptr spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
     bn::sprite_palette_ptr active_palette = spr_selector.palette();
     bn::sprite_palette_ptr inactive_palette = create_palette(16, 16, 16);
+    bn::optional<bn::sprite_ptr> countdown_number_sprite;
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
     int combo = 1;
     int score = 0;
     int displayed_score = 0;
     bool displayed_score_bump = false;  // Bump the score display Y every frame it increments.
+    int start_countdown_timer_frames = 0;    // How many frames remain until the game starts.
+    int timer_frames = 0;   // Amount of update frames since last reset.
     bool animating = false;
 public: 
     board_controller()
@@ -66,9 +76,11 @@ public:
     void hide()
     {
         for (auto s : score_text_sprites) { s.set_visible(false); }
+        for (auto s : timer_sprites) { s.set_visible(false); }
+        if (countdown_number_sprite.has_value()) { countdown_number_sprite.value().set_visible(false); }
+        
         score_number_sprites.clear();
         combo_text_sprites.clear();
-
         spr_selector.set_visible(false);
         bd.hide();
     }
@@ -89,10 +101,53 @@ public:
         b.new_board();
         bd.reset();
         bd.animate_random_drop_all_in();
+        start_countdown_timer_frames = 60 * 3;
+        timer_frames = 0;
     }
 
     void update()
     {
+        if (start_countdown_timer_frames > 0)
+        {
+            int next_threshold;
+            if (start_countdown_timer_frames > 120)
+            {
+                countdown_number_sprite = bn::sprite_items::three.create_sprite(0, 0);
+                next_threshold = 120;
+            }
+            else if (start_countdown_timer_frames > 60)
+            {
+                countdown_number_sprite = bn::sprite_items::two.create_sprite(0, 0);
+                next_threshold = 60;
+            }
+            else
+            {
+                countdown_number_sprite = bn::sprite_items::one.create_sprite(0, 0);
+                next_threshold = 0;
+            }
+
+            //countdown_number_sprite.value().set_double_size_mode(bn::sprite_double_size_mode::ENABLED);
+            auto scale = bn::fixed(1.5);
+            scale -= 0.01 * (next_threshold - start_countdown_timer_frames);
+            countdown_number_sprite.value().set_scale(scale);
+
+            if (start_countdown_timer_frames == 180 || start_countdown_timer_frames == 120 || start_countdown_timer_frames == 60)
+            {
+                bn::sound_items::countdown_beep.play();
+            }
+            else if (start_countdown_timer_frames == 1)
+            {
+                bn::sound_items::countdown_finish_beep.play();
+                bn::music_items::cirno.play();
+            }
+
+            --start_countdown_timer_frames;
+        }
+        else
+        {
+            countdown_number_sprite.reset();
+        }
+
         // If A is held then prevent selector movement.
         if (bn::keypad::a_held())
         {
@@ -210,7 +265,29 @@ public:
         text_generator.generate(+116, -55 + (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
 
         combo_text_sprites.clear();
-        text_generator.generate(+116, +55, bn::format<4>("x{}", combo), combo_text_sprites);
+        text_generator.generate(+116, +35, bn::format<4>("x{}", combo), combo_text_sprites);
+
+        int seconds = timer_frames / 60;
+        int minutes = seconds / 60;
+        seconds = seconds - (minutes * 60);
+
+        // Build time string in format "01:23".
+        bn::string<5> timer_str;
+        bn::ostringstream string_stream(timer_str);
+
+        if (minutes < 10) string_stream.append("0");    // Append leading zero if not double digits.
+        string_stream.append(minutes);
+        string_stream.append(":");
+        if (seconds < 10) string_stream.append("0");    // Append leading zero if not double digits.
+        string_stream.append(seconds);
+
+        timer_sprites.clear();
+        text_generator.generate(+116, +69, timer_str, timer_sprites);
+
+        if (start_countdown_timer_frames == 0)
+        {
+            ++timer_frames;
+        }
     }
 };
 

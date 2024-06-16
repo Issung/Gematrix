@@ -14,7 +14,7 @@
 #include "board.h"
 
 // TODO: Do we have to define this here? T-T It's being used in anim_slide.
-static bn::fixed_point positions[board::rows][board::cols]; // The point of each drawn sprite, saved for use by the selector.
+static bn::fixed_point positions[board::rows][board::cols]; // The point of each drawn sprite, saved for use by the selector. [row][col]
 
 /*enum anim_type 
 {
@@ -174,6 +174,9 @@ private:
     bn::list<anim_slide, board::total_gems> slides;
     bn::list<anim_destroy, board::total_gems> destroys;
     // Move to ROM to avoid ram usage. https://gvaliente.github.io/butano/faq.html
+    drawer_state current_state;
+    bn::random rand = bn::random();
+public:
     const bn::sprite_palette_ptr colors[board::max_colors] =
     {
         create_palette(31, 0, 0),   // Red
@@ -184,9 +187,7 @@ private:
         create_palette(31, 31, 31), // White (Wildcard)
         // No color for empty at the moment, just make the sprite invisible.
     };
-    drawer_state current_state;
-    bn::random rand = bn::random();
-public:
+    
     board_drawer(board& _b) : b(_b)
     {
         for (int r = 0; r < board::rows; r++)

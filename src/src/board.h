@@ -183,20 +183,26 @@ public:
 
         for (int i = 0; i < rows_length; ++i)
         {
-            auto row_index = row_indices[i];
-            auto row = gems[row_index];
-            auto matches_in_row = get_matches_in_sequence(row, row_length);
+            auto row = row_indices[i];
+            auto matches_in_row = get_matches_in_sequence(gems[row], row_length);
 
             for (int match_index = 0; match_index < matches_in_row.size(); ++match_index)
             {
+                auto match_type = gem_type::Empty;
                 auto positions = bn::vector<match_position, match::MAX_LENGTH>();
 
                 for (int position_index = 0; position_index < matches_in_row[match_index].size(); ++position_index)
                 {
-                    positions.push_back(match_position(row_index, matches_in_row[match_index][position_index]));
+                    auto col = matches_in_row[match_index][position_index];
+                    positions.push_back(match_position(row, col));
+
+                    if (gems[row][col] != gem_type::Wildcard)
+                    {
+                        match_type = gems[row][col];
+                    }
                 }
 
-                matches.push_back(match(positions));
+                matches.push_back(match(match_type, positions));
             }
         }
 
@@ -215,14 +221,21 @@ public:
 
             for (int match_index = 0; match_index < matches_in_col.size(); ++match_index)
             {
+                auto match_type = gem_type::Empty;
                 auto positions = bn::vector<match_position, match::MAX_LENGTH>();
 
                 for (int position_index = 0; position_index < matches_in_col[match_index].size(); ++position_index)
                 {
-                    positions.push_back(match_position(matches_in_col[match_index][position_index], col));
+                    auto row = matches_in_col[match_index][position_index];
+                    positions.push_back(match_position(row, col));
+
+                    if (gems[row][col] != gem_type::Wildcard)
+                    {
+                        match_type = gems[row][col];
+                    }
                 }
 
-                matches.push_back(match(positions));
+                matches.push_back(match(match_type, positions));
             }
         }
 

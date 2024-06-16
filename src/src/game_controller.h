@@ -40,6 +40,7 @@
 #include "bn_sprite_affine_mat_ptr.h"
 #include <bn_sprite_double_size_mode.h>
 #include "bn_music_items.h"
+#include "floating_text.h"
 
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class game_controller
@@ -56,6 +57,7 @@ private:
     bn::sprite_palette_ptr active_palette = spr_selector.palette();
     bn::sprite_palette_ptr inactive_palette = create_palette(16, 16, 16);
     bn::optional<bn::sprite_ptr> countdown_number_sprite;
+    bn::vector<floating_text, 64> floating_texts;
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
     int combo = 1;
@@ -65,12 +67,33 @@ private:
     int start_countdown_timer_frames = 0;    // How many frames remain until the game starts.
     int timer_frames = 0;   // Amount of update frames since last reset.
     bool animating = false;
+
+    void animate_texts()
+    {
+        for(auto it = floating_texts.begin(), end = floating_texts.end(); it != end;)
+        {
+            floating_text& ft = *it;
+
+            if(ft.update())
+            {
+                floating_texts.erase(it);
+                end = floating_texts.end();
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
+
 public: 
     game_controller()
     {
         text_generator.set_left_alignment();
         text_generator.generate(+70, -70, "SCORE", score_text_sprites);   // TODO: Fix Y position to align with gems border when added.
         text_generator.set_right_alignment();
+
+        text_generator_small.set_center_alignment();
     }
 
     void hide()
@@ -213,8 +236,8 @@ public:
         spr_selector.set_position(selector_point);
         spr_selector.set_palette(animating ? inactive_palette : active_palette);
 
-        auto animations_complete = bd.update();
-        if (animations_complete)
+        auto board_animations_complete = bd.update();
+        if (board_animations_complete)
         {
             // When the drawer says the animations are complete, the state variable is whatever it
             // was last animation, by knowing what it was was last animation we can tell what animations just completed.
@@ -231,8 +254,20 @@ public:
                     // TODO: Score adjustments:
                     // - Should each gem be worth worth its match size? E.g. A 4-of-a-kind each gem gives 4 points?
                     // - Should each match increase the combo rather than each play_matches?
-                    score += m.positions.size() * combo;
+                    auto points_per_gem = m.positions.size() * combo;
+                    auto points_for_match = points_per_gem * m.positions.size();
+                    score += points_for_match;
+                    
                     bn::sound_items::match.play();
+
+                    // TODO: Small innacuracy in displayed floating scores when 1 gem is used in 2 matches, the user
+                    // only sees the top-most point for a single match.
+                    for (auto p : m.positions)
+                    {
+                        auto palette = bd.colors[(uint8_t)m.type];
+                        auto ft = floating_text(positions[p.row][p.col], palette, points_per_gem);
+                        floating_texts.push_back(ft);
+                    }
                 }
 
                 bd.play_matches(matches);
@@ -294,6 +329,8 @@ public:
         {
             ++timer_frames;
         }
+
+        animate_texts();
     }
 };
 

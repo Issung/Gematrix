@@ -45,6 +45,14 @@ public:
 
         return true;
     }
+
+    void set_visible(bool visible)
+    {
+        for (auto s : text_sprites)
+        {
+            s.set_visible(visible);
+        }
+    }
 private:
     // Horrible hack that allows us to set the sprite's position before we construct the tween action.
     bn::sprite_ptr determine_sprite(bn::fixed_point pos, bn::sprite_palette_ptr palette, int points)

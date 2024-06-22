@@ -100,6 +100,7 @@ public:
     {
         for (auto s : score_text_sprites) { s.set_visible(false); }
         for (auto s : timer_sprites) { s.set_visible(false); }
+        for (auto ft : floating_texts) { ft.set_visible(false); }
         if (countdown_number_sprite.has_value()) { countdown_number_sprite.value().set_visible(false); }
         
         score_number_sprites.clear();
@@ -111,21 +112,26 @@ public:
     void show()
     {
         for (auto s : score_text_sprites) { s.set_visible(true); }
+        for (auto ft : floating_texts) { ft.set_visible(true); }
         spr_selector.set_visible(true);
         bd.show();
     }
 
     void reset()
     {
+        // Reset game tracking state.
         score = 0;
         displayed_score = 0;
         combo = 1;
         animating = false;
+        // Create new board.
         b.new_board();
+        // Reset GUI.
         bd.reset();
         bd.animate_random_drop_all_in();
         start_countdown_timer_frames = 60 * 3;
         timer_frames = 0;
+        floating_texts.clear();
     }
 
     void update()

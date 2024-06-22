@@ -328,12 +328,16 @@ public:
     {
         // TestMethodHere
 
+        // TODO Make a util class that returns 2d int arrays with numbers 0 - 29 to indicate gem drop order, rather than repeat the anim logic for every variant.
+
         int i = rand.get_int(4);
         if (i == 0) animate_drop_all_in();
         else if (i == 1) animate_drop_all_in_alternating_rows();
         else if (i == 2) animate_scattered_drop_all_in();
         else if (i == 3) animate_scattered_drop_all_in_row_by_row();
         else BN_ASSERT(false, "Invalid value for random all-drop-in animation.");
+
+        current_state = drawer_state::DroppingGems;
     }
 
     static constexpr int delay_between_each_gem_drop = 2;

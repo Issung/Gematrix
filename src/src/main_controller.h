@@ -66,6 +66,7 @@ private:
         if (state == game_state::menus)
         {
             change_menu(&main_menu);
+            bc.hide();
         }
         else if (state == game_state::paused)
         {
@@ -131,9 +132,16 @@ private:
             }
 
             // MENU: PLAY
-            else if (key == menu_option_key::sprint)    // TODO: Make game modes do something different.
+            else if (key == menu_option_key::sprint)
             {
-                bc.reset();
+                // TODO: Make game modes do something different.
+                // TODO: Make sub-menus for sprint/timeattack to select goal score / time limit.
+                bc.newgame_sprint(50);
+                change_state(game_state::ingame);
+            }
+            else if (key == menu_option_key::time_attack)
+            {
+                bc.newgame_timeattack(5);
                 change_state(game_state::ingame);
             }
 
@@ -170,11 +178,18 @@ public:
     {
         if (state == game_state::ingame)
         {
-            bc.update();
-
             if (bn::keypad::start_pressed())
             {
                 change_state(game_state::paused);
+            }
+            else
+            {
+                bool game_done = bc.update();
+
+                if (game_done)
+                {
+                    change_state(game_state::menus);
+                }
             }
         }
         else if (state == game_state::menus || state == game_state::paused)

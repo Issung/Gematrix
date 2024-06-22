@@ -1,6 +1,6 @@
 #pragma once
 
-enum menu_option_key
+enum class menu_option_key
 {
     // Main Menu
     play,

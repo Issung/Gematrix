@@ -27,7 +27,7 @@ public:
     anim_type type;
 };*/
 
-enum drawer_state
+enum class drawer_state
 {
     Waiting,    // Waiting for player input.
     PlayingSlide,  // Animating the player's input.
@@ -188,7 +188,7 @@ public:
         create_palette(31, 31, 31), // White (Wildcard)
         // No color for empty at the moment, just make the sprite invisible.
     };
-    
+
     board_drawer(board& _b) : b(_b)
     {
         for (int r = 0; r < board::rows; r++)

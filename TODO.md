@@ -19,11 +19,19 @@
     * Sprint
         * Variants (300 points, 1000 points, 5000 points)
     * Time Attack
+        * Variants (1 min, 3 mins, 5 mins)
     * Survival
+        * Difficulties?
+    * Completion screen
+        * New hiscore name entry
+    * In-game UI changes depending on mode.
 * Implement hi-scores
     * Sprint variants
-    * Time Attack
+    * Time Attack variants
     * Survival
+    * Saving to SRAM
+    * Name entry
+    * Menu viewing screen
 * ~~Titles at top of menus~~
     * Bigger font?
     * Animate title (wobble effect from examples)

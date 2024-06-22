@@ -42,6 +42,13 @@
 #include "bn_music_items.h"
 #include "floating_text.h"
 
+enum class game_mode
+{
+    sprint,
+    timeattack,
+    survival,
+};
+
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class game_controller
 {
@@ -60,13 +67,18 @@ private:
     bn::vector<floating_text, 64> floating_texts;
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
-    int combo = 1;
-    int score = 0;
     int displayed_score = 0;
     bool displayed_score_bump = false;  // Bump the score display Y every frame it increments.
     int start_countdown_timer_frames = 0;    // How many frames remain until the game starts.
-    int timer_frames = 0;   // Amount of update frames since last reset.
     bool animating = false;
+    
+    // Game mode variables.
+    game_mode mode;
+    int combo = 1;
+    int score = 0;
+    int timer_frames = 0;   // Amount of update frames since last reset.
+    int score_goal = 0; // For sprint game mode, what is the player's goal score.
+    int time_limit_frames = -1; // For time-attack game mode, what is the player's time limit (in frames).
 
     void animate_texts()
     {
@@ -113,6 +125,7 @@ public:
     {
         for (auto s : score_text_sprites) { s.set_visible(true); }
         for (auto ft : floating_texts) { ft.set_visible(true); }
+
         spr_selector.set_visible(true);
         bd.show();
     }
@@ -124,17 +137,34 @@ public:
         displayed_score = 0;
         combo = 1;
         animating = false;
+        start_countdown_timer_frames = 60 * 3;
+        timer_frames = 0;
+
         // Create new board.
         b.new_board();
+
         // Reset GUI.
         bd.reset();
         bd.animate_random_drop_all_in();
-        start_countdown_timer_frames = 60 * 3;
-        timer_frames = 0;
         floating_texts.clear();
     }
 
-    void update()
+    void newgame_sprint(int _score_goal)
+    {
+        reset();
+        this->mode = game_mode::sprint;
+        this->score_goal = _score_goal;
+    }
+
+    void newgame_timeattack(int time_limit_seconds)
+    {
+        reset();
+        this->mode = game_mode::timeattack;
+        this->time_limit_frames = time_limit_seconds * 60;
+    }
+
+    // Returns true if game is complete, based on different conditions depending on game mode.
+    bool update()
     {
         if (start_countdown_timer_frames > 0)
         {
@@ -319,6 +349,8 @@ public:
         seconds = seconds - (minutes * 60);
 
         // Build time string in format "01:23".
+        // TODO: Refactor string formatting to util class method.
+        // TODO: Make time count downards if in time-attack mode.
         bn::string<5> timer_str;
         bn::ostringstream string_stream(timer_str);
 
@@ -337,6 +369,17 @@ public:
         }
 
         animate_texts();
+
+        // Check for game-end conditions.
+        if (
+            (mode == game_mode::sprint && score >= score_goal)
+            || (mode == game_mode::timeattack && timer_frames > time_limit_frames)
+        )
+        {
+            return true;
+        }
+
+        return false;
     }
 };
 

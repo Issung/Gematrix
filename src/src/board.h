@@ -55,10 +55,9 @@ public:
     }
 
     // TODO: Return collection of gem drops and get board_drawer to animate it.
-    // TODO: Generate a board that has no pre-existing matches.
     void new_board()
     {
-        while (true)
+        for (int generation = 1; true; ++generation)
         {
             for (int r = 0; r < board::rows; r++)
             {
@@ -66,13 +65,14 @@ public:
                 {
                     auto val = gen_new_gem();
                     gems[r][c] = val;
-                    BN_LOG("Generated gem ", r, ",", c, ": ", (uint8_t)val);
+                    //BN_LOG("Generated gem ", r, ",", c, ": ", (uint8_t)val);
                 }
             }
 
-            // OPTIMISATION: Can be improved by instead of regenerating the board, just replace the matches with random gems until the match is broken.
+            // OPTIMISATION: Can be improved by instead of regenerating the whole board, just replace the matches with random gems until the match is broken.
             if (get_all_matches().size() == 0)
             {
+                BN_LOG("Took ", generation, " attempt(s) to generate board with no matches.");
                 break;
             }
         }

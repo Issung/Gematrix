@@ -68,8 +68,9 @@ public:
         sprite.set_visible(visible);
         sprite.set_palette(palette);
 
-        auto debug_distance = determine_duration(from_row, from_col, to_row, to_col) / 10;
-        BN_LOG("Created slide for ", from_row, ",", from_col, " to ", to_row, ",", to_col, ". Distance: ", debug_distance);
+        //auto debug_distance = determine_duration(from_row, from_col, to_row, to_col) / 10;
+        //BN_LOG("Created slide for ", from_row, ",", from_col, " to ", to_row, ",", to_col, ". Distance: ", debug_distance);
+
         //auto dbg_to = determine_to_position(to_row, to_col);
         //BN_LOG("Created slide for ", from.x(), ",", from.y(), " to ", dbg_to.x(), ",", dbg_to.y());
     }
@@ -203,11 +204,11 @@ public:
                 gem_sprite.set_palette(palette);
 
                 gem_sprites.push_back(gem_sprite);
-                BN_LOG("Made gem r: ", r, " c: ", c);
+                //BN_LOG("Made gem r: ", r, " c: ", c);
             }
         }
 
-        BN_LOG("Finished constructing board_drawer.");
+        //BN_LOG("Finished constructing board_drawer.");
     }
 
     void hide()

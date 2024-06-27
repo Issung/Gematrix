@@ -12,6 +12,10 @@ enum class menu_option_key
     time_attack,    // How many points can be gotten in X amount of time.
     survival,       // How long can you stay alive against a decreasing lifespan by gaining more points.
 
+    // Settings Menu
+    music_toggle,
+    sfx_toggle,
+
     // Pause Menu
     resume,
     restart,

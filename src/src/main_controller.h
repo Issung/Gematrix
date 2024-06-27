@@ -5,6 +5,7 @@
 #include "menu_option.h"
 #include "game_state.h"
 #include "menu_option_key.h"
+#include "memory.h"
 
 class main_controller
 {
@@ -20,9 +21,22 @@ private:
     menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
     menu play_menu = menu("PLAY", &main_menu);
     menu ranks_menu = menu("RANKS", &main_menu);
-    menu settings_menu = menu("SETTINGS", &main_menu);
+    menu settings_menu = menu("SETTINGS", &main_menu);  // [0] = SFX, [1] = MUSIC
     menu pause_menu = menu("PAUSE");
     menu* current_menu = &main_menu;
+
+    void generate_options_text()
+    {
+        for (int i = 0; i < current_menu->options.max_size(); ++i)
+        {
+            menu_options_sprites[i].clear();
+        }
+
+        for (int i = 0; i < current_menu->options.size(); ++i)
+        {
+            text_generator.generate(0, -20 + (i * 20), current_menu->options[i].text, menu_options_sprites[i]);
+        }
+    }
 
     // Set to `nullptr` to hide menu.
     void change_menu(menu* new_menu)
@@ -48,14 +62,7 @@ private:
             text_generator.generate(0, -50, current_menu->title, menu_title_sprites);
 
             // Options
-            for (int i = 0; i < current_menu->options.max_size(); ++i)
-            {
-                menu_options_sprites[i].clear();
-            }
-            for (int i = 0; i < current_menu->options.size(); ++i)
-            {
-                text_generator.generate(0, -20 + (i * 20), current_menu->options[i].text, menu_options_sprites[i]);
-            }
+            generate_options_text();
         }
     }
 
@@ -145,6 +152,24 @@ private:
                 change_state(game_state::ingame);
             }
 
+            // MENU: SETTINGS
+            else if (key == menu_option_key::sfx_toggle)
+            {
+                auto new_setting = !memory::sfx_enabled();
+                memory::sfx_enabled_set(new_setting);
+                memory::save();
+                settings_menu.options[0].text = new_setting ? "SFX ON" : "SFX OFF";
+                generate_options_text();
+            }
+            else if (key == menu_option_key::music_toggle)
+            {
+                auto new_setting = !memory::music_enabled();
+                memory::music_enabled_set(new_setting);
+                memory::save();
+                settings_menu.options[1].text = new_setting ? "MUSIC ON" : "MUSIC OFF";
+                generate_options_text();
+            }
+
             // MENU: PAUSE
             else if (key == menu_option_key::resume)
             {
@@ -222,6 +247,9 @@ public:
         play_menu.options.push_back(menu_option("SPRINT", menu_option_key::sprint));
         play_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::time_attack));
         play_menu.options.push_back(menu_option("SURVIVAL", menu_option_key::survival));
+
+        settings_menu.options.push_back(menu_option(memory::sfx_enabled() ? "SFX ON" : "SFX OFF", menu_option_key::sfx_toggle));
+        settings_menu.options.push_back(menu_option(memory::music_enabled() ? "MUSIC ON" : "MUSIC OFF", menu_option_key::music_toggle));
 
         pause_menu.options.push_back(menu_option("RESUME", menu_option_key::resume));
         pause_menu.options.push_back(menu_option("RESTART", menu_option_key::restart));

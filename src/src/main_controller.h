@@ -6,11 +6,12 @@
 #include "game_state.h"
 #include "menu_option_key.h"
 #include "memory.h"
+#include "bn_string.h"
 
 class main_controller
 {
 private:
-    game_controller bc;
+    game_controller gc;
     game_state state = game_state::menus;
     int selected_index = 0;
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
@@ -20,7 +21,8 @@ private:
     bn::vector<bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT>, MAX_OPTIONS_PER_SCREEN> menu_options_sprites;
     menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
     menu play_menu = menu("PLAY", &main_menu);
-    menu ranks_menu = menu("RANKS", &main_menu);
+    menu records_menu = menu("RECORDS", &main_menu);
+    menu records_timeattack_menu = menu("RECORDS (TIMEATTACK)", &records_menu);
     menu settings_menu = menu("SETTINGS", &main_menu);  // [0] = SFX, [1] = MUSIC
     menu pause_menu = menu("PAUSE");
     menu* current_menu = &main_menu;
@@ -73,20 +75,20 @@ private:
         if (state == game_state::menus)
         {
             change_menu(&main_menu);
-            bc.hide();
+            gc.hide();
         }
         else if (state == game_state::paused)
         {
             if (bn::music::playing()) bn::music::pause();
             bn::sound_items::pause.play();
-            bc.hide();
+            gc.hide();
             change_menu(&pause_menu);
         }
         else if (state == game_state::ingame)
         {
             if (bn::music::paused()) bn::music::resume();
             change_menu(nullptr);
-            bc.show();
+            gc.show();
         }
     }
 
@@ -127,9 +129,9 @@ private:
                 change_menu(&play_menu);
                 bn::sound_items::menu_ok.play();
             }
-            else if (key == menu_option_key::ranks)
+            else if (key == menu_option_key::records)
             {
-                change_menu(&ranks_menu);
+                change_menu(&records_menu);
                 bn::sound_items::menu_ok.play();
             }
             else if (key == menu_option_key::settings)
@@ -139,17 +141,32 @@ private:
             }
 
             // MENU: PLAY
-            else if (key == menu_option_key::sprint)
+            else if (key == menu_option_key::play_sprint)
             {
                 // TODO: Make game modes do something different.
                 // TODO: Make sub-menus for sprint/timeattack to select goal score / time limit.
-                bc.newgame_sprint(50);
+                gc.newgame_sprint(50);
                 change_state(game_state::ingame);
             }
-            else if (key == menu_option_key::time_attack)
+            else if (key == menu_option_key::play_timeattack)
             {
-                bc.newgame_timeattack(5);
+                gc.newgame_timeattack(30);
                 change_state(game_state::ingame);
+            }
+
+            // MENU: RECORDS
+            else if (key == menu_option_key::records_timeattack)
+            {   
+                records_timeattack_menu.options.clear();
+                for (int i = 0; i < MAX_RECORDS; ++i)
+                {
+                    auto record = memory::save_data.timeattack_records[i];
+                    auto name = bn::string<RECORD_NAME_LENGTH>(record.name.data(), RECORD_NAME_LENGTH);
+                    auto str = bn::format<12>("{} {}", name, record.score);
+                    BN_LOG(str);
+                    records_timeattack_menu.options.push_back(menu_option(str, menu_option_key::noop));
+                }
+                change_menu(&records_timeattack_menu);
             }
 
             // MENU: SETTINGS
@@ -178,7 +195,7 @@ private:
             else if (key == menu_option_key::restart)
             {
                 bn::music::stop();
-                bc.reset();
+                gc.reset();
                 change_state(game_state::ingame);
             }
             else if (key == menu_option_key::quit)
@@ -209,10 +226,23 @@ public:
             }
             else
             {
-                bool game_done = bc.update();
+                bool game_done = gc.update();
 
                 if (game_done)
                 {
+                    if (gc.get_mode() == game_mode::timeattack)
+                    {
+                        auto score = gc.get_score();
+
+                        if (memory::is_record_timeattack(score))
+                        {
+                            RECORD_NAME name;
+                            name[0] = 'J';
+                            name[1] = 'O';
+                            name[2] = 'E';
+                            memory::save_record_timeattack(record_timeattack(name, score));
+                        }
+                    }
                     change_state(game_state::menus);
                 }
             }
@@ -231,7 +261,7 @@ public:
 
     main_controller()
     {
-        bc.hide();
+        gc.hide();
         text_generator.set_center_alignment();
 
         // Init vectors inside menu_options_sprites.
@@ -241,12 +271,15 @@ public:
         }
 
         main_menu.options.push_back(menu_option("PLAY", menu_option_key::play));
-        main_menu.options.push_back(menu_option("RANKS", menu_option_key::ranks));
+        main_menu.options.push_back(menu_option("RECORDS", menu_option_key::records));
         main_menu.options.push_back(menu_option("SETTINGS", menu_option_key::settings));
         
-        play_menu.options.push_back(menu_option("SPRINT", menu_option_key::sprint));
-        play_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::time_attack));
-        play_menu.options.push_back(menu_option("SURVIVAL", menu_option_key::survival));
+        play_menu.options.push_back(menu_option("SPRINT", menu_option_key::play_sprint));
+        play_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::play_timeattack));
+        play_menu.options.push_back(menu_option("SURVIVAL", menu_option_key::play_survival));
+
+        records_menu.options.push_back(menu_option("SPRINT", menu_option_key::records_sprint));
+        records_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::records_timeattack));
 
         settings_menu.options.push_back(menu_option(memory::sfx_enabled() ? "SFX ON" : "SFX OFF", menu_option_key::sfx_toggle));
         settings_menu.options.push_back(menu_option(memory::music_enabled() ? "MUSIC ON" : "MUSIC OFF", menu_option_key::music_toggle));

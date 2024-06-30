@@ -109,6 +109,10 @@ public:
         text_generator_small.set_center_alignment();
     }
 
+    game_mode get_mode() { return mode; }
+    int get_score() { return score; }
+    int get_timer_frames() { return timer_frames; } 
+
     void hide()
     {
         for (auto s : score_text_sprites) { s.set_visible(false); }

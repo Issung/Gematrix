@@ -2,6 +2,9 @@
 
 #include "bn_string.h"
 
+#define ubyte uint8_t   // Unsigned byte
+#define sbyte int8_t    // Signed byte
+
 class util
 {
 public:

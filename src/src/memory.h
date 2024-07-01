@@ -48,11 +48,12 @@ struct record_timeattack
 // Struct, so we can load it all from SRAM.
 struct sram_data
 {
-    bool enable_music = true;
     bool enable_sfx = true;
+    bool enable_music = true;
     
     // TODO: Sprint records.
-    bn::array<record_timeattack, MAX_RECORDS> timeattack_records; // Scores for timeattack mode, [0] is the highest score.
+    bn::array<record_sprint, MAX_RECORDS> records_sprint;
+    bn::array<record_timeattack, MAX_RECORDS> records_timeattack; // Scores for timeattack mode, [0] is the highest score.
 
     // A sequence of characters that indicates the sram
     // has been formatted for the layout we desire. If this does not match
@@ -81,23 +82,27 @@ public:
         }
         else
         {
-            BN_LOG("Initialised save_data, was not formatted.");
+            BN_LOG("Memory save_data not formatted, initialising now.");
 
             bn::sram::clear(bn::sram::size());
             save_data = sram_data();
-            auto name = bn::array<char, 3>();
-            name[0] = 'T';
-            name[1] = 'E';
-            name[2] = 'T';
-            save_data.timeattack_records[0] = record_timeattack(name, 1000);
-            save_data.timeattack_records[1] = record_timeattack(name, 800);
-            save_data.timeattack_records[2] = record_timeattack(name, 500);
-            save_data.timeattack_records[3] = record_timeattack(name, 400);
-            save_data.timeattack_records[4] = record_timeattack(name, 150);
+            // Populate defaults.
+            save_data.enable_sfx = true;
+            save_data.enable_music = true;
+            save_data.records_sprint[0] = record_sprint(util::to_record_name("ONE"), 2000);
+            save_data.records_sprint[1] = record_sprint(util::to_record_name("TOO"), 3938);
+            save_data.records_sprint[2] = record_sprint(util::to_record_name("TEE"), 4628);
+            save_data.records_sprint[3] = record_sprint(util::to_record_name("FOO"), 5619);
+            save_data.records_sprint[4] = record_sprint(util::to_record_name("FII"), 6682);
+            save_data.records_timeattack[0] = record_timeattack(util::to_record_name("ONE"), 1000);
+            save_data.records_timeattack[1] = record_timeattack(util::to_record_name("TWO"), 800);
+            save_data.records_timeattack[2] = record_timeattack(util::to_record_name("TRE"), 500);
+            save_data.records_timeattack[3] = record_timeattack(util::to_record_name("FOR"), 400);
+            save_data.records_timeattack[4] = record_timeattack(util::to_record_name("FIV"), 150);
             save_data.format_tag = expected_format_tag;
             bn::sram::write(save_data);
 
-            BN_LOG("SRAM Cleared.");
+            BN_LOG("Memory save_data initialised.");
         }
     }
 
@@ -126,9 +131,22 @@ public:
         bn::sram::write(save_data);
     }
 
+    static bool is_record_sprint(int time_in_frames)
+    {
+        for (auto record : save_data.records_sprint)
+        {
+            if (time_in_frames < record.time_in_frames)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     static bool is_record_timeattack(int score)
     {
-        for (auto record : save_data.timeattack_records)
+        for (auto record : save_data.records_timeattack)
         {
             if (score > record.score)
             {
@@ -139,21 +157,44 @@ public:
         return false;
     }
 
-    static void save_record_timeattack(record_timeattack record)
+    static void save_record_sprint(record_sprint record)
     {
        for (ubyte i = 0; i < MAX_RECORDS; ++i)
        {
-            if (record.score > save_data.timeattack_records[i].score)
+            if (record.time_in_frames < save_data.records_sprint[i].time_in_frames)
             {
                 // Read the scores array backwards from end to current position.
                 // Shifting the scores towards the end, overwriting the final score.
                 for (int j = MAX_RECORDS - 1; j > i; --j)
                 {
-                    save_data.timeattack_records[j] = save_data.timeattack_records[j - 1];
+                    save_data.records_sprint[j] = save_data.records_sprint[j - 1];
                 }
 
                 // Insert the new score
-                save_data.timeattack_records[i] = record;
+                save_data.records_sprint[i] = record;
+                save();
+                return;
+            }
+        }
+
+        BN_ASSERT(false, "Tried to save a timeattack record that was not better than any existing records");
+    }
+
+    static void save_record_timeattack(record_timeattack record)
+    {
+       for (ubyte i = 0; i < MAX_RECORDS; ++i)
+       {
+            if (record.score > save_data.records_timeattack[i].score)
+            {
+                // Read the scores array backwards from end to current position.
+                // Shifting the scores towards the end, overwriting the final score.
+                for (int j = MAX_RECORDS - 1; j > i; --j)
+                {
+                    save_data.records_timeattack[j] = save_data.records_timeattack[j - 1];
+                }
+
+                // Insert the new score
+                save_data.records_timeattack[i] = record;
                 save();
                 return;
             }

@@ -22,6 +22,7 @@ private:
     menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
     menu play_menu = menu("PLAY", &main_menu);
     menu records_menu = menu("RECORDS", &main_menu);
+    menu records_sprint_menu = menu("RECORDS (SPRINT)", &records_menu);
     menu records_timeattack_menu = menu("RECORDS (TIMEATTACK)", &records_menu);
     menu settings_menu = menu("SETTINGS", &main_menu);  // [0] = SFX, [1] = MUSIC
     menu pause_menu = menu("PAUSE");
@@ -155,14 +156,27 @@ private:
             }
 
             // MENU: RECORDS
+            else if (key == menu_option_key::records_sprint)
+            {   
+                records_sprint_menu.options.clear();
+                for (int i = 0; i < MAX_RECORDS; ++i)
+                {
+                    auto record = memory::save_data.records_sprint[i];
+                    auto name = bn::string<RECORD_NAME_LENGTH>(record.name.data(), RECORD_NAME_LENGTH);
+                    auto str = bn::format<menu_option::TEXT_MAX_LENGTH>("{} {}", name, util::frames_to_time_millis_string(record.time_in_frames));
+                    BN_LOG(str);
+                    records_sprint_menu.options.push_back(menu_option(str, menu_option_key::noop));
+                }
+                change_menu(&records_sprint_menu);
+            }
             else if (key == menu_option_key::records_timeattack)
             {   
                 records_timeattack_menu.options.clear();
                 for (int i = 0; i < MAX_RECORDS; ++i)
                 {
-                    auto record = memory::save_data.timeattack_records[i];
+                    auto record = memory::save_data.records_timeattack[i];
                     auto name = bn::string<RECORD_NAME_LENGTH>(record.name.data(), RECORD_NAME_LENGTH);
-                    auto str = bn::format<12>("{} {}", name, record.score);
+                    auto str = bn::format<menu_option::TEXT_MAX_LENGTH>("{} {}", name, record.score);
                     BN_LOG(str);
                     records_timeattack_menu.options.push_back(menu_option(str, menu_option_key::noop));
                 }
@@ -230,19 +244,25 @@ public:
 
                 if (game_done)
                 {
-                    if (gc.get_mode() == game_mode::timeattack)
+                    if (gc.get_mode() == game_mode::sprint)
+                    {
+                        auto time = gc.get_timer_frames();
+
+                        if (memory::is_record_sprint(time))
+                        {
+                            memory::save_record_sprint(record_sprint(util::to_record_name("NEW"), time));
+                        }
+                    }
+                    else if (gc.get_mode() == game_mode::timeattack)
                     {
                         auto score = gc.get_score();
 
                         if (memory::is_record_timeattack(score))
                         {
-                            RECORD_NAME name;
-                            name[0] = 'J';
-                            name[1] = 'O';
-                            name[2] = 'E';
-                            memory::save_record_timeattack(record_timeattack(name, score));
+                            memory::save_record_timeattack(record_timeattack(util::to_record_name("NEW"), score));
                         }
                     }
+
                     change_state(game_state::menus);
                 }
             }

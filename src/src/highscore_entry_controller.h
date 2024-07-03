@@ -7,7 +7,7 @@
 #include "gj_big_sprite_font.h"
 
 #define NAME_ALLOWED_CHARS_COUNT 27
-static constexpr char name_allowed_chars[NAME_ALLOWED_CHARS_COUNT] = {
+constexpr char name_allowed_chars[NAME_ALLOWED_CHARS_COUNT] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G',
     'H', 'I', 'J', 'K', 'L', 'M', 'N',
     'O', 'P', 'Q', 'R', 'S', 'T', 'U',
@@ -24,30 +24,24 @@ private:
     int chars[RECORD_NAME_LENGTH] = { 0, 0, 0 };
 
 public:
+    highscore_entry_controller()
+    {
+        text_generator.set_center_alignment();
+    }
+
     // Build name array from the user's input, use when `update()` returns `true`.
     bn::array<char, RECORD_NAME_LENGTH> build_name_array()
     {
-        bn::array<char, RECORD_NAME_LENGTH> name = {name_allowed_chars[chars[0]], name_allowed_chars[chars[1]], name_allowed_chars[chars[2]]};
-        BN_LOG("NAME ARRAY RESULT: ", name[0], name[1], name[2]);
-        return name;
-    }
-
-    bn::string_view build_name_string()
-    {
-        auto array = build_name_array();
-        auto str = bn::string<4>(array.data(), 3);
-        BN_LOG("NAME STRING RESULT INNER: ", str);
-        return str;
+        return {name_allowed_chars[chars[0]], name_allowed_chars[chars[1]], name_allowed_chars[chars[2]]};
     }
 
     // Returns `false` if the user is still editing, returns `true` when the user confirms.
     bool update()
-    {                  
+    {
         menu_title_sprites.clear();
 
-        auto name_string = build_name_string();
-        BN_LOG("NAME STRING RESULT OUTER:", name_string);
-
+        auto name_array = build_name_array();
+        auto name_string = bn::string<4>(name_array.data(), 3);
         text_generator.generate(0, 60, name_string, menu_title_sprites);
 
         if (bn::keypad::left_pressed() && position > 0)

@@ -7,11 +7,13 @@
 #include "menu_option_key.h"
 #include "memory.h"
 #include "bn_string.h"
+#include "highscore_entry_controller.h"
 
 class main_controller
 {
 private:
     game_controller gc;
+    highscore_entry_controller hec;
     game_state state = game_state::menus;
     int selected_index = 0;
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
@@ -95,6 +97,9 @@ private:
 
     void update_menus()
     {
+        hec.update();
+        return;
+
         for (int i = 0; i < current_menu->options.size(); ++i)
         {
             auto palette = i == selected_index ? palette_highlight : palette_grey;

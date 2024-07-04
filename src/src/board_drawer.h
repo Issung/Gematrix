@@ -195,6 +195,8 @@ public:
         {
             for (int c = 0; c < board::cols; c++)
             {
+                //BN_LOG("Making gem r: ", r, " c: ", c);
+
                 auto x = (30 * c) - 100;
                 auto y = (30 * r) - 60;
                 positions[r][c] = bn::fixed_point(x, y);
@@ -202,8 +204,8 @@ public:
                 auto palette_index = (uint8_t)b.gems[r][c];
                 auto palette = colors[palette_index];
                 gem_sprite.set_palette(palette);
-
                 gem_sprites.push_back(gem_sprite);
+
                 //BN_LOG("Made gem r: ", r, " c: ", c);
             }
         }

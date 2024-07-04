@@ -78,6 +78,7 @@ private:
         if (state == game_state::menus)
         {
             change_menu(&main_menu);
+            hec.hide();
             gc.hide();
         }
         else if (state == game_state::paused)
@@ -93,12 +94,19 @@ private:
             change_menu(nullptr);
             gc.show();
         }
+        else if (state == game_state::gameover)
+        {
+            change_menu(nullptr);
+            text_generator.generate(0, -50, "GAMEOVER", menu_title_sprites);
+            gc.hide();
+            hec.update();
+        }
     }
 
     void update_menus()
     {
-        hec.update();
-        return;
+        //hec.update();
+        //return;
 
         for (int i = 0; i < current_menu->options.size(); ++i)
         {
@@ -249,32 +257,43 @@ public:
 
                 if (game_done)
                 {
-                    if (gc.get_mode() == game_mode::sprint)
-                    {
-                        auto time = gc.get_timer_frames();
-
-                        if (memory::is_record_sprint(time))
-                        {
-                            memory::save_record_sprint(record_sprint(util::to_record_name("NEW"), time));
-                        }
-                    }
-                    else if (gc.get_mode() == game_mode::timeattack)
-                    {
-                        auto score = gc.get_score();
-
-                        if (memory::is_record_timeattack(score))
-                        {
-                            memory::save_record_timeattack(record_timeattack(util::to_record_name("NEW"), score));
-                        }
-                    }
-
-                    change_state(game_state::menus);
+                    change_state(game_state::gameover);
                 }
             }
         }
         else if (state == game_state::menus || state == game_state::paused)
         {
             update_menus();
+        }
+        else if (state == game_state::gameover)
+        {
+            auto name_entered = hec.update();
+            
+            if (name_entered)
+            {
+                auto name = hec.build_name_array();
+                
+                if (gc.get_mode() == game_mode::sprint)
+                {
+                    auto time = gc.get_timer_frames();
+
+                    if (memory::is_record_sprint(time))
+                    {
+                        memory::save_record_sprint(record_sprint(name, time));
+                    }
+                }
+                else if (gc.get_mode() == game_mode::timeattack)
+                {
+                    auto score = gc.get_score();
+
+                    if (memory::is_record_timeattack(score))
+                    {
+                        memory::save_record_timeattack(record_timeattack(name, score));
+                    }
+                }
+
+                change_state(game_state::menus);
+            }
         }
         else
         {
@@ -287,6 +306,7 @@ public:
     main_controller()
     {
         gc.hide();
+        hec.hide();
         text_generator.set_center_alignment();
 
         // Init vectors inside menu_options_sprites.

@@ -63,4 +63,15 @@ public:
     {
         return {view[0], view[1], view[2]};
     }
+
+    // Convert a record position (0 - 4) to ordinal string (1st - 5th).
+    static bn::string<3> ordinal_string(int position)
+    {
+        if (position == 0) { return "1st"; }
+        else if (position == 1) { return "2nd"; }
+        else if (position == 2) { return "3rd"; }
+        else if (position == 3) { return "4th"; }
+        else if (position == 4) { return "5th"; }
+        else { BN_ASSERT(false, "Invalid position: ", position); return "NUL"; }
+    }
 };

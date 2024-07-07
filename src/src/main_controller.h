@@ -28,6 +28,7 @@ private:
     menu records_timeattack_menu = menu("RECORDS (TIMEATTACK)", &records_menu);
     menu settings_menu = menu("SETTINGS", &main_menu);  // [0] = SFX, [1] = MUSIC
     menu pause_menu = menu("PAUSE");
+    menu gameover_menu = menu("GAMEOVER", &main_menu);
     menu* current_menu = &main_menu;
 
     void generate_options_text()
@@ -94,11 +95,25 @@ private:
             change_menu(nullptr);
             gc.show();
         }
-        else if (state == game_state::gameover)
+        else if (state == game_state::hiscore)
         {
             change_menu(nullptr);
-            text_generator.generate(0, -50, "GAMEOVER", menu_title_sprites);
             gc.hide();
+
+            auto record_position = memory::is_record(gc.get_mode(), gc.get_gamemode_metric());
+            text_generator.generate(0, -50, "GAMEOVER", menu_title_sprites);
+            
+            if (record_position.has_value())
+            {
+                auto ordinal_position = util::ordinal_string(record_position.value());
+                auto text = bn::format<menu_option::TEXT_MAX_LENGTH>("HISCORE! {}", ordinal_position);
+                text_generator.generate(0, 0, text, menu_options_sprites[0]);
+            }
+            else
+            {
+                text_generator.generate(0, 0, "NO HISCORE", menu_options_sprites[0]);
+            }
+
             hec.update();
         }
     }
@@ -164,7 +179,7 @@ private:
             }
             else if (key == menu_option_key::play_timeattack)
             {
-                gc.newgame_timeattack(30);
+                gc.newgame_timeattack(5);
                 change_state(game_state::ingame);
             }
 
@@ -257,7 +272,19 @@ public:
 
                 if (game_done)
                 {
-                    change_state(game_state::gameover);
+                    auto is_record = memory::is_record(gc.get_mode(), gc.get_gamemode_metric()).has_value();
+
+                    if (is_record)
+                    {
+                        // TODO: Display user's score.
+                        change_state(game_state::hiscore);
+                    }
+                    else
+                    {
+                        change_state(game_state::menus);
+                        // TODO: Display user's gamemode & score to them
+                        change_menu(&gameover_menu);
+                    }
                 }
             }
         }
@@ -265,33 +292,17 @@ public:
         {
             update_menus();
         }
-        else if (state == game_state::gameover)
+        else if (state == game_state::hiscore)
         {
             auto name_entered = hec.update();
             
             if (name_entered)
             {
                 auto name = hec.build_name_array();
-                
-                if (gc.get_mode() == game_mode::sprint)
-                {
-                    auto time = gc.get_timer_frames();
+                auto mode = gc.get_mode();
+                auto metric = gc.get_gamemode_metric();
 
-                    if (memory::is_record_sprint(time))
-                    {
-                        memory::save_record_sprint(record_sprint(name, time));
-                    }
-                }
-                else if (gc.get_mode() == game_mode::timeattack)
-                {
-                    auto score = gc.get_score();
-
-                    if (memory::is_record_timeattack(score))
-                    {
-                        memory::save_record_timeattack(record_timeattack(name, score));
-                    }
-                }
-
+                memory::save_record(mode, name, metric);
                 change_state(game_state::menus);
             }
         }
@@ -332,6 +343,9 @@ public:
         pause_menu.options.push_back(menu_option("RESUME", menu_option_key::resume));
         pause_menu.options.push_back(menu_option("RESTART", menu_option_key::restart));
         pause_menu.options.push_back(menu_option("QUIT", menu_option_key::quit));
+
+        gameover_menu.options.push_back(menu_option("RETRY", menu_option_key::restart));
+        gameover_menu.options.push_back(menu_option("MENU", menu_option_key::quit));
 
         change_menu(&main_menu);
     }

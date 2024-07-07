@@ -42,13 +42,7 @@
 #include "bn_music_items.h"
 #include "floating_text.h"
 #include "util.h"
-
-enum class game_mode
-{
-    sprint,
-    timeattack,
-    survival,
-};
+#include "game_mode.h"
 
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class game_controller
@@ -112,7 +106,15 @@ public:
 
     game_mode get_mode() { return mode; }
     int get_score() { return score; }
-    int get_timer_frames() { return timer_frames; } 
+    int get_timer_frames() { return timer_frames; }
+
+    // Get the metric relevant to the current gamemode (either score or frametime).
+    int get_gamemode_metric()
+    {
+        if (mode == game_mode::sprint) { return timer_frames; }
+        else if (mode == game_mode::timeattack) { return score; }
+        else { BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode); return 0; }
+    }
 
     void hide()
     {

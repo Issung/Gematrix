@@ -47,8 +47,11 @@ public:
         return {name_allowed_chars[chars[0]], name_allowed_chars[chars[1]], name_allowed_chars[chars[2]]};
     }
 
+    // Hide the highscore entry, also setup state so next display is in the state the user expects.
+    // TODO: Load the last entered name (requires new memory to be saved in sram)
     void hide()
     {
+        position = 0;
         name_sprites.clear();
         up_arrow->set_visible(false);
         down_arrow->set_visible(false);

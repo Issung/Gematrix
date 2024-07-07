@@ -131,30 +131,67 @@ public:
         bn::sram::write(save_data);
     }
 
-    static bool is_record_sprint(int time_in_frames)
+    // Return record position (0 - 4  (1st to 5th)) for the relevant `game_mode` (sprint / timeattack).
+    static bn::optional<ubyte> is_record(game_mode mode, int frametime_or_score)
     {
-        for (auto record : save_data.records_sprint)
+        if (mode == game_mode::sprint)
         {
-            if (time_in_frames < record.time_in_frames)
-            {
-                return true;
-            }
+            return is_record_sprint(frametime_or_score);
         }
-
-        return false;
+        else if (mode == game_mode::timeattack)
+        {
+            return is_record_timeattack(frametime_or_score);
+        }
+        else
+        {
+            BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode);
+            return bn::optional<ubyte>();
+        }
     }
 
-    static bool is_record_timeattack(int score)
+    // Returns empty optional or the new record position 0 to 4 (1st to 5th).
+    static bn::optional<ubyte> is_record_sprint(int time_in_frames)
     {
-        for (auto record : save_data.records_timeattack)
+        for (ubyte i = 0; i < MAX_RECORDS; ++i)
         {
-            if (score > record.score)
+            if (time_in_frames < save_data.records_sprint[i].time_in_frames)
             {
-                return true;
+                return i;
             }
         }
 
-        return false;
+        return bn::optional<ubyte>();
+    }
+
+    // Returns empty optional or the new record position 0 to 4 (1st to 5th).
+    static bn::optional<ubyte> is_record_timeattack(int score)
+    {
+        for (ubyte i = 0; i < MAX_RECORDS; ++i)
+        {
+            if (score > save_data.records_timeattack[i].score)
+            {
+                return i;
+            }
+        }
+
+        return bn::optional<ubyte>();
+    }
+
+    // Save sprint / timeattack record depending on `mode`.
+    static void save_record(game_mode mode, RECORD_NAME name, int frametime_or_score)
+    {
+        if (mode == game_mode::sprint)
+        {
+            return save_record_sprint(record_sprint(name, frametime_or_score));
+        }
+        else if (mode == game_mode::timeattack)
+        {
+            return save_record_timeattack(record_timeattack(name, frametime_or_score));
+        }
+        else
+        {
+            BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode);
+        }
     }
 
     static void save_record_sprint(record_sprint record)

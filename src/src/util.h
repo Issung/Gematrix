@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bn_array.h"
 #include "bn_string.h"
 
 #define ubyte uint8_t   // Unsigned byte
@@ -33,7 +34,7 @@ public:
 
     // Convert a frame count to a time string in the format "mm:ss.xx" with leading zeroes.
     // Based on a 60fps assumption (60 frames = 1 second).
-    static bn::string<9> frames_to_time_millis_string(int frame_count)
+    static bn::string<8> frames_to_time_millis_string(int frame_count)
     {
         int total_seconds = frame_count / 60;
         int minutes = total_seconds / 60;
@@ -43,7 +44,7 @@ public:
         // Build time string in format "01:23.45".
         // TODO: Refactor string formatting to util class method.
         // TODO: Make time count downwards if in time-attack mode.
-        bn::string<9> timer_str;
+        bn::string<8> timer_str;
         bn::ostringstream string_stream(timer_str);
 
         if (minutes < 10) string_stream.append("0");    // Append leading zero if not double digits.

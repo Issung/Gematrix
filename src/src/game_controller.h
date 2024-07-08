@@ -116,6 +116,14 @@ public:
         else { BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode); return 0; }
     }
 
+    bn::string<8> get_gamemode_metric_display_string()
+    {
+        auto metric = get_gamemode_metric();
+        if (mode == game_mode::sprint) { return util::frames_to_time_millis_string(metric); }
+        else if (mode == game_mode::timeattack) { return bn::to_string<8>(metric); }
+        else { BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode); return bn::to_string<1>(0); }
+    }
+
     void hide()
     {
         for (auto s : score_text_sprites) { s.set_visible(false); }

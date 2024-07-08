@@ -38,9 +38,12 @@ private:
             menu_options_sprites[i].clear();
         }
 
-        for (int i = 0; i < current_menu->options.size(); ++i)
+        // TODO: Position options nicely, and also obeying optional y position in menu.
+        auto size = current_menu->get_options_count();
+        auto y_pos = current_menu->get_y_position();
+        for (int i = 0; i < size; ++i)
         {
-            text_generator.generate(0, -20 + (i * 20), current_menu->options[i].text, menu_options_sprites[i]);
+            text_generator.generate(0, y_pos + (i * 20), current_menu->options[i].text, menu_options_sprites[i]);
         }
     }
 
@@ -105,16 +108,13 @@ private:
             
             if (record_position.has_value())
             {
-                auto ordinal_position = util::ordinal_string(record_position.value());
+                auto ordinal_position = util::ordinal_string(record_position.value());  // Position text (e.g. 1st, 3rd, etc).
                 auto text = bn::format<menu_option::TEXT_MAX_LENGTH>("HISCORE! {}", ordinal_position);
-                text_generator.generate(0, 0, text, menu_options_sprites[0]);
+                text_generator.generate(0, -30, text, menu_options_sprites[0]);
+                auto score_str = gc.get_gamemode_metric_display_string();
+                BN_LOG("SCORE STR: ", score_str);
+                text_generator.generate(0, -15, score_str, menu_options_sprites[1]);
             }
-            else
-            {
-                text_generator.generate(0, 0, "NO HISCORE", menu_options_sprites[0]);
-            }
-
-            hec.update();
         }
     }
 
@@ -284,6 +284,15 @@ public:
                         change_state(game_state::menus);
                         // TODO: Display user's gamemode & score to them
                         change_menu(&gameover_menu);
+
+                        while (gameover_menu.options.size() > 2)
+                        {
+                            gameover_menu.options.pop_back();
+                        }
+
+                        text_generator.generate(0, -30, "SCORE", menu_options_sprites[2]);
+                        auto score_string = gc.get_gamemode_metric_display_string();
+                        text_generator.generate(0, -15, score_string, menu_options_sprites[3]);
                     }
                 }
             }
@@ -346,6 +355,8 @@ public:
 
         gameover_menu.options.push_back(menu_option("RETRY", menu_option_key::restart));
         gameover_menu.options.push_back(menu_option("MENU", menu_option_key::quit));
+        gameover_menu.options_count = 2;
+        gameover_menu.options_y_position = 30;
 
         change_menu(&main_menu);
     }

@@ -3,6 +3,7 @@
 #include "bn_string.h"
 #include "menu_option_key.h"
 
+// A menu option contains text and a key which can be used to identify the action to perform when the option is selected.
 class menu_option
 {
 public:

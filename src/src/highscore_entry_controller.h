@@ -6,6 +6,7 @@
 #include "bn_keypad.h"
 #include "bn_vector.h"
 #include "bn_optional.h"
+#include "bn_sprite_ptr.h"
 #include "gj_big_sprite_font.h"
 
 #define NAME_ALLOWED_CHARS_COUNT 27
@@ -27,6 +28,20 @@ private:
     int position = 0;   // Current cursor position in the name (0 to 2).
     int chars[RECORD_NAME_LENGTH] = { 0, 0, 0 };
 
+    // Convert an actual character, to an allowed character index for the array above.
+    // Range 0 - 25 = A - Z, and 26 = _.
+    int char_to_allowed_char_index(char c)
+    {
+        ubyte ret = 
+            (c == '_') ? NAME_ALLOWED_CHARS_COUNT - 1 :
+            (c > 'A' && c < 'Z') ? c - 'A' :
+            256;
+        
+        BN_ASSERT(ret != 256, "Character is now allowed: ", c);
+
+        return ret;
+    }
+
 public:
     highscore_entry_controller()
     {
@@ -39,6 +54,11 @@ public:
         up_arrow = text_generator.generate<1>(0, 55, "^")[0];
         down_arrow = text_generator.generate<1>(0, 65, "^")[0];
         down_arrow->set_rotation_angle(180);
+
+        auto last_name = memory::get_last_name();
+        chars[0] = char_to_allowed_char_index(last_name[0]);
+        chars[1] = char_to_allowed_char_index(last_name[1]);
+        chars[2] = char_to_allowed_char_index(last_name[2]);
     }
 
     // Build name array from the user's input, use when `update()` returns `true`.
@@ -48,7 +68,6 @@ public:
     }
 
     // Hide the highscore entry, also setup state so next display is in the state the user expects.
-    // TODO: Load the last entered name (requires new memory to be saved in sram)
     void hide()
     {
         position = 0;

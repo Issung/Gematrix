@@ -29,9 +29,10 @@
     * Sprint variants
     * Time Attack variants
     * Survival
-    * Saving to SRAM
-    * Name entry
-    * Menu viewing screen
+    * ~~Saving to SRAM~~
+    * ~~Name entry~~
+    * ~~Menu viewing screen~~
+        * Variants
 * ~~Titles at top of menus~~
     * Bigger font?
     * Animate title (wobble effect from examples)

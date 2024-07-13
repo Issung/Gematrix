@@ -45,6 +45,9 @@
 #include "game_mode.h"
 #include "levels.h"
 
+#define HEADER_X +70    // x position for headers, with left-align generation.
+#define VALUE_X +116    // x position for values, with right-align generation.
+
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class game_controller
 {
@@ -103,9 +106,9 @@ public:
     game_controller()
     {
         text_generator.set_left_alignment();
-        text_generator.generate(+70, -71, "SCORE", score_header_text);   // TODO: Fix Y position to align with gems border when added.
-        text_generator.generate(+70, -50, "COMBO", combo_header_text);
-        text_generator.generate(+70, +40, "TIME", time_header_text);
+        text_generator.generate(HEADER_X, -71, "SCORE", score_header_text);   // TODO: Fix Y position to align with gems border when added.
+        text_generator.generate(HEADER_X, -50, "COMBO", combo_header_text);
+        text_generator.generate(HEADER_X, +40, "TIME", time_header_text);
         // LIMIT/GOAL text is generated in newgame function.
         text_generator.set_right_alignment();
 
@@ -190,12 +193,12 @@ public:
 
         goal_or_limit_header_text.clear();
         text_generator.set_left_alignment();
-        text_generator.generate(+70, +61, mode == game_mode::sprint ? "GOAL" : "LIMIT", goal_or_limit_header_text);
+        text_generator.generate(HEADER_X, +61, mode == game_mode::sprint ? "GOAL" : "LIMIT", goal_or_limit_header_text);
         text_generator.set_right_alignment();
 
         goal_or_limit_text.clear();
         auto goal_limit_value = mode == game_mode::sprint ? bn::to_string<5>(score_goal) : util::frames_to_time_string(time_limit_frames);
-        text_generator.generate(+116, +70, goal_limit_value, goal_or_limit_text);
+        text_generator.generate(VALUE_X, +70, goal_limit_value, goal_or_limit_text);
     }
 
     // Returns true if game is complete, based on different conditions depending on game mode.
@@ -374,15 +377,15 @@ public:
         // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
         // 6 characters can fit, before overflowing onto the game board.
         score_number_sprites.clear();
-        text_generator.generate(+116, -64 + (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
+        text_generator.generate(VALUE_X, -64 + (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
 
         combo_text_sprites.clear();
-        text_generator.generate(+116, -41, bn::format<4>("x{}", combo), combo_text_sprites);
+        text_generator.generate(VALUE_X, -41, bn::format<4>("x{}", combo), combo_text_sprites);
         
         auto time_str = util::frames_to_time_string(timer_frames);
 
         timer_sprites.clear();
-        text_generator.generate(+116, +49, time_str, timer_sprites);
+        text_generator.generate(VALUE_X, +49, time_str, timer_sprites);
 
         if (start_countdown_timer_frames == 0)
         {

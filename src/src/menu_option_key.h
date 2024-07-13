@@ -15,6 +15,11 @@ enum class menu_option_key
     play_timeattack,    // How many points can be gotten in X amount of time.
     play_survival,       // How long can you stay alive against a decreasing lifespan by gaining more points.
 
+    // Play Menu (Level Select)
+    play_level0,
+    play_level1,
+    play_level2,
+
     // Records Menu
     records_sprint,
     records_timeattack,

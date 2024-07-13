@@ -13,7 +13,7 @@ constexpr static int MAX_OPTIONS_PER_SCREEN = 5;
 class menu
 {
 public:
-    // We use string_view here because 
+    // We use string_view here because
     bn::string_view title;
     menu* previous_menu = nullptr;
     bn::vector<menu_option, MAX_OPTIONS_PER_SCREEN> options;

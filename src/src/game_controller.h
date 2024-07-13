@@ -43,6 +43,7 @@
 #include "floating_text.h"
 #include "util.h"
 #include "game_mode.h"
+#include "levels.h"
 
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class game_controller
@@ -69,6 +70,7 @@ private:
     
     // Game mode variables.
     game_mode mode;
+    ubyte level;
     int combo = 1;
     int score = 0;
     int timer_frames = 0;   // Amount of update frames since last reset.
@@ -105,8 +107,7 @@ public:
     }
 
     game_mode get_mode() { return mode; }
-    int get_score() { return score; }
-    int get_timer_frames() { return timer_frames; }
+    ubyte get_level() { return level; }
 
     // Get the metric relevant to the current gamemode (either score or frametime).
     int get_gamemode_metric()
@@ -165,18 +166,13 @@ public:
         floating_texts.clear();
     }
 
-    void newgame_sprint(int _score_goal)
+    void newgame(game_mode _mode, ubyte _level)
     {
         reset();
-        this->mode = game_mode::sprint;
-        this->score_goal = _score_goal;
-    }
-
-    void newgame_timeattack(int time_limit_seconds)
-    {
-        reset();
-        this->mode = game_mode::timeattack;
-        this->time_limit_frames = time_limit_seconds * 60;
+        this->mode = _mode;
+        this->level = _level;
+        this->score_goal = mode == game_mode::sprint ? levels::sprint[level] : 0;
+        this->time_limit_frames = mode == game_mode::timeattack ? levels::timeattack[level] : 0;
     }
 
     // Returns true if game is complete, based on different conditions depending on game mode.

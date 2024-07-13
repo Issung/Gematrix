@@ -15,6 +15,9 @@
 #define MAX_RECORDS 5    // Maximum amount of records to store per game mode.
 #define RECORD_NAME_LENGTH 3   // Length of a name in a record.
 #define RECORD_NAME bn::array<char, RECORD_NAME_LENGTH>
+#define SPRINT_RECORD_LIST bn::array<record_sprint, MAX_RECORDS>
+#define LEVELS 3
+#define TIMEATTACK_RECORD_LIST bn::array<record_timeattack, MAX_RECORDS>
 
 // A single record for the sprint mode.
 struct record_sprint
@@ -52,9 +55,10 @@ struct sram_data
     bool enable_sfx = true;
     bool enable_music = true;
     
-    // TODO: Sprint records.
-    bn::array<record_sprint, MAX_RECORDS> records_sprint;
-    bn::array<record_timeattack, MAX_RECORDS> records_timeattack; // Scores for timeattack mode, [0] is the highest score.
+    // Arrays of arrays, for level selection, then records.
+    // Levels (0 - 2), 0 is the lowest/fastest level, going upwards from there.
+    bn::array<SPRINT_RECORD_LIST, LEVELS> records_sprint;
+    bn::array<TIMEATTACK_RECORD_LIST, LEVELS> records_timeattack; // Scores for timeattack mode, [0] is the highest score.
 
     RECORD_NAME last_name;  // The last name used for a record, used to populate the name entry again.
 
@@ -69,11 +73,11 @@ class memory
 {
 private:
     // Returns empty optional or the new record position 0 to 4 (1st to 5th).
-    static bn::optional<ubyte> is_record_sprint(int time_in_frames)
+    static bn::optional<ubyte> is_record_sprint(ubyte level, int time_in_frames)
     {
         for (ubyte i = 0; i < MAX_RECORDS; ++i)
         {
-            if (time_in_frames < save_data.records_sprint[i].time_in_frames)
+            if (time_in_frames < save_data.records_sprint[level][i].time_in_frames)
             {
                 return i;
             }
@@ -83,11 +87,11 @@ private:
     }
 
     // Returns empty optional or the new record position 0 to 4 (1st to 5th).
-    static bn::optional<ubyte> is_record_timeattack(int score)
+    static bn::optional<ubyte> is_record_timeattack(ubyte level, int score)
     {
         for (ubyte i = 0; i < MAX_RECORDS; ++i)
         {
-            if (score > save_data.records_timeattack[i].score)
+            if (score > save_data.records_timeattack[level][i].score)
             {
                 return i;
             }
@@ -96,21 +100,21 @@ private:
         return bn::optional<ubyte>();
     }
 
-    static void insert_record_sprint(record_sprint record)
+    static void insert_record_sprint(ubyte level, record_sprint record)
     {
        for (ubyte i = 0; i < MAX_RECORDS; ++i)
        {
-            if (record.time_in_frames < save_data.records_sprint[i].time_in_frames)
+            if (record.time_in_frames < save_data.records_sprint[level][i].time_in_frames)
             {
                 // Read the scores array backwards from end to current position.
                 // Shifting the scores towards the end, overwriting the final score.
                 for (int j = MAX_RECORDS - 1; j > i; --j)
                 {
-                    save_data.records_sprint[j] = save_data.records_sprint[j - 1];
+                    save_data.records_sprint[level][j] = save_data.records_sprint[level][j - 1];
                 }
 
                 // Insert the new score
-                save_data.records_sprint[i] = record;
+                save_data.records_sprint[level][i] = record;
                 return;
             }
         }
@@ -118,21 +122,21 @@ private:
         BN_ASSERT(false, "Tried to save a timeattack record that was not better than any existing records");
     }
 
-    static void insert_record_timeattack(record_timeattack record)
+    static void insert_record_timeattack(ubyte level, record_timeattack record)
     {
        for (ubyte i = 0; i < MAX_RECORDS; ++i)
        {
-            if (record.score > save_data.records_timeattack[i].score)
+            if (record.score > save_data.records_timeattack[level][i].score)
             {
                 // Read the scores array backwards from end to current position.
                 // Shifting the scores towards the end, overwriting the final score.
                 for (int j = MAX_RECORDS - 1; j > i; --j)
                 {
-                    save_data.records_timeattack[j] = save_data.records_timeattack[j - 1];
+                    save_data.records_timeattack[level][j] = save_data.records_timeattack[level][j - 1];
                 }
 
                 // Insert the new score
-                save_data.records_timeattack[i] = record;
+                save_data.records_timeattack[level][i] = record;
                 return;
             }
         }
@@ -163,16 +167,47 @@ public:
             // Populate defaults.
             save_data.enable_sfx = true;
             save_data.enable_music = true;
-            save_data.records_sprint[0] = record_sprint(util::to_record_name("ONE"), 2000);
-            save_data.records_sprint[1] = record_sprint(util::to_record_name("TOO"), 3938);
-            save_data.records_sprint[2] = record_sprint(util::to_record_name("TEE"), 4628);
-            save_data.records_sprint[3] = record_sprint(util::to_record_name("FOO"), 5619);
-            save_data.records_sprint[4] = record_sprint(util::to_record_name("FII"), 6682);
-            save_data.records_timeattack[0] = record_timeattack(util::to_record_name("ONE"), 1000);
-            save_data.records_timeattack[1] = record_timeattack(util::to_record_name("TWO"), 800);
-            save_data.records_timeattack[2] = record_timeattack(util::to_record_name("TRE"), 500);
-            save_data.records_timeattack[3] = record_timeattack(util::to_record_name("FOR"), 400);
-            save_data.records_timeattack[4] = record_timeattack(util::to_record_name("FIV"), 150);
+
+            // TODO: Make up new scores & names.
+
+            // sprints
+            // level 0
+            save_data.records_sprint[0][0] = record_sprint(util::to_record_name("ONE"), 2000);
+            save_data.records_sprint[0][1] = record_sprint(util::to_record_name("TOO"), 3938);
+            save_data.records_sprint[0][2] = record_sprint(util::to_record_name("TEE"), 4628);
+            save_data.records_sprint[0][3] = record_sprint(util::to_record_name("FOO"), 5619);
+            save_data.records_sprint[0][4] = record_sprint(util::to_record_name("FII"), 6682);
+            // level 1
+            save_data.records_sprint[1][0] = record_sprint(util::to_record_name("ONE"), 2000);
+            save_data.records_sprint[1][1] = record_sprint(util::to_record_name("TOO"), 3938);
+            save_data.records_sprint[1][2] = record_sprint(util::to_record_name("TEE"), 4628);
+            save_data.records_sprint[1][3] = record_sprint(util::to_record_name("FOO"), 5619);
+            save_data.records_sprint[1][4] = record_sprint(util::to_record_name("FII"), 6682);
+            // level 2
+            save_data.records_sprint[2][0] = record_sprint(util::to_record_name("ONE"), 2000);
+            save_data.records_sprint[2][1] = record_sprint(util::to_record_name("TOO"), 3938);
+            save_data.records_sprint[2][2] = record_sprint(util::to_record_name("TEE"), 4628);
+            save_data.records_sprint[2][3] = record_sprint(util::to_record_name("FOO"), 5619);
+            save_data.records_sprint[2][4] = record_sprint(util::to_record_name("FII"), 6682);
+            // timeattack
+            // level 0
+            save_data.records_timeattack[0][0] = record_timeattack(util::to_record_name("ONE"), 1000);
+            save_data.records_timeattack[0][1] = record_timeattack(util::to_record_name("TWO"), 800);
+            save_data.records_timeattack[0][2] = record_timeattack(util::to_record_name("TRE"), 500);
+            save_data.records_timeattack[0][3] = record_timeattack(util::to_record_name("FOR"), 400);
+            save_data.records_timeattack[0][4] = record_timeattack(util::to_record_name("FIV"), 150);
+            // level 1
+            save_data.records_timeattack[1][0] = record_timeattack(util::to_record_name("ONE"), 1000);
+            save_data.records_timeattack[1][1] = record_timeattack(util::to_record_name("TWO"), 800);
+            save_data.records_timeattack[1][2] = record_timeattack(util::to_record_name("TRE"), 500);
+            save_data.records_timeattack[1][3] = record_timeattack(util::to_record_name("FOR"), 400);
+            save_data.records_timeattack[1][4] = record_timeattack(util::to_record_name("FIV"), 150);
+            // level 2
+            save_data.records_timeattack[2][0] = record_timeattack(util::to_record_name("ONE"), 1000);
+            save_data.records_timeattack[2][1] = record_timeattack(util::to_record_name("TWO"), 800);
+            save_data.records_timeattack[2][2] = record_timeattack(util::to_record_name("TRE"), 500);
+            save_data.records_timeattack[2][3] = record_timeattack(util::to_record_name("FOR"), 400);
+            save_data.records_timeattack[2][4] = record_timeattack(util::to_record_name("FIV"), 150);
             save_data.last_name = util::to_record_name("AAA");
             save_data.format_tag = expected_format_tag;
             bn::sram::write(save_data);
@@ -208,15 +243,15 @@ public:
     }
 
     // Return record position (0 - 4  (1st to 5th)) for the relevant `game_mode` (sprint / timeattack).
-    static bn::optional<ubyte> is_record(game_mode mode, int frametime_or_score)
+    static bn::optional<ubyte> is_record(game_mode mode, ubyte level, int frametime_or_score)
     {
         if (mode == game_mode::sprint)
         {
-            return is_record_sprint(frametime_or_score);
+            return is_record_sprint(level, frametime_or_score);
         }
         else if (mode == game_mode::timeattack)
         {
-            return is_record_timeattack(frametime_or_score);
+            return is_record_timeattack(level, frametime_or_score);
         }
         else
         {
@@ -226,15 +261,15 @@ public:
     }
 
     // Save sprint / timeattack record depending on `mode`.
-    static void save_record(game_mode mode, RECORD_NAME name, int frametime_or_score)
+    static void save_record(game_mode mode, ubyte level, RECORD_NAME name, int frametime_or_score)
     {
         if (mode == game_mode::sprint)
         {
-            insert_record_sprint(record_sprint(name, frametime_or_score));
+            insert_record_sprint(level, record_sprint(name, frametime_or_score));
         }
         else if (mode == game_mode::timeattack)
         {
-            insert_record_timeattack(record_timeattack(name, frametime_or_score));
+            insert_record_timeattack(level, record_timeattack(name, frametime_or_score));
         }
         else
         {

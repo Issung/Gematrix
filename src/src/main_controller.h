@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "bn_string.h"
 #include "highscore_entry_controller.h"
+#include "game_mode.h"
 
 class main_controller
 {
@@ -21,8 +22,10 @@ private:
     bn::sprite_palette_ptr palette_grey = create_palette(16, 16, 16);
     bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT> menu_title_sprites;
     bn::vector<bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT>, MAX_OPTIONS_PER_SCREEN> menu_options_sprites;
+
     menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
     menu play_menu = menu("PLAY", &main_menu);
+    menu play_levels_menu = menu("LEVEL", &play_menu);  // After the user selects a mode on the `play_menu`, they select the level on this one.
     menu records_menu = menu("RECORDS", &main_menu);
     menu records_sprint_menu = menu("RECORDS (SPRINT)", &records_menu);
     menu records_timeattack_menu = menu("RECORDS (TIMEATTACK)", &records_menu);
@@ -30,6 +33,11 @@ private:
     menu pause_menu = menu("PAUSE");
     menu gameover_menu = menu("GAMEOVER", &main_menu);
     menu* current_menu = &main_menu;
+
+    // The user's desired game mode when on the `play_levels_menu`.
+    game_mode play_mode;
+    bn::string_view sprint_levels_menu_title = "GOAL SCORE";
+    bn::string_view timeattack_levels_menu_title = "TIME LIMIT";
 
     void generate_options_text()
     {
@@ -103,7 +111,7 @@ private:
             change_menu(nullptr);
             gc.hide();
 
-            auto record_position = memory::is_record(gc.get_mode(), gc.get_gamemode_metric());
+            auto record_position = memory::is_record(gc.get_mode(), gc.get_level(), gc.get_gamemode_metric());
             text_generator.generate(0, -50, "GAMEOVER", menu_title_sprites);
             
             if (record_position.has_value())
@@ -172,19 +180,49 @@ private:
             // MENU: PLAY
             else if (key == menu_option_key::play_sprint)
             {
-                // TODO: Make game modes do something different.
-                // TODO: Make sub-menus for sprint/timeattack to select goal score / time limit.
-                gc.newgame_sprint(50);
-                change_state(game_state::ingame);
+                play_mode = game_mode::sprint;
+
+                play_levels_menu.title = sprint_levels_menu_title;
+                play_levels_menu.options.clear();
+                play_levels_menu.options.push_back(menu_option(bn::to_string<5>(levels::sprint[0]), menu_option_key::play_level0));
+                play_levels_menu.options.push_back(menu_option(bn::to_string<5>(levels::sprint[1]), menu_option_key::play_level1));
+                play_levels_menu.options.push_back(menu_option(bn::to_string<5>(levels::sprint[2]), menu_option_key::play_level2));
+
+                change_menu(&play_levels_menu);
             }
             else if (key == menu_option_key::play_timeattack)
             {
-                gc.newgame_timeattack(5);
+                play_mode = game_mode::timeattack;
+
+                play_levels_menu.title = timeattack_levels_menu_title;
+                play_levels_menu.options.clear();
+                play_levels_menu.options.push_back(menu_option(util::frames_to_time_string(levels::timeattack[0]), menu_option_key::play_level0));
+                play_levels_menu.options.push_back(menu_option(util::frames_to_time_string(levels::timeattack[1]), menu_option_key::play_level1));
+                play_levels_menu.options.push_back(menu_option(util::frames_to_time_string(levels::timeattack[2]), menu_option_key::play_level2));
+
+                change_menu(&play_levels_menu);
+            }
+
+            // MENU: PLAY LEVEL SELECT
+            else if (key == menu_option_key::play_level0)
+            {
+                gc.newgame(play_mode, 0);
+                change_state(game_state::ingame);
+            }
+            else if (key == menu_option_key::play_level1)
+            {
+                gc.newgame(play_mode, 1);
+                change_state(game_state::ingame);
+            }
+            else if (key == menu_option_key::play_level2)
+            {
+                gc.newgame(play_mode, 2);
                 change_state(game_state::ingame);
             }
 
             // MENU: RECORDS
-            else if (key == menu_option_key::records_sprint)
+            // TODO: All been broken by record levels
+            /*else if (key == menu_option_key::records_sprint)
             {   
                 records_sprint_menu.options.clear();
                 for (int i = 0; i < MAX_RECORDS; ++i)
@@ -209,7 +247,7 @@ private:
                     records_timeattack_menu.options.push_back(menu_option(str, menu_option_key::noop));
                 }
                 change_menu(&records_timeattack_menu);
-            }
+            }*/
 
             // MENU: SETTINGS
             else if (key == menu_option_key::sfx_toggle)
@@ -272,7 +310,7 @@ public:
 
                 if (game_done)
                 {
-                    auto is_record = memory::is_record(gc.get_mode(), gc.get_gamemode_metric()).has_value();
+                    auto is_record = memory::is_record(gc.get_mode(), gc.get_level(), gc.get_gamemode_metric()).has_value();
 
                     if (is_record)
                     {
@@ -309,9 +347,10 @@ public:
             {
                 auto name = hec.build_name_array();
                 auto mode = gc.get_mode();
+                auto level = gc.get_level();
                 auto metric = gc.get_gamemode_metric();
 
-                memory::save_record(mode, name, metric);
+                memory::save_record(mode, level, name, metric);
                 change_state(game_state::menus);
             }
         }

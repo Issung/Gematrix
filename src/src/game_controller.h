@@ -52,10 +52,14 @@ private:
     board b;
     board_drawer bd = board_drawer(b);
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
-    bn::vector<bn::sprite_ptr, 6> score_text_sprites;  // Text sprites that just say "SCORE".
+    bn::vector<bn::sprite_ptr, 5> score_header_text;  // Text sprites that just say "SCORE".
+    bn::vector<bn::sprite_ptr, 5> combo_header_text;    // Text sprites that say "COMBO".
+    bn::vector<bn::sprite_ptr, 4> time_header_text;    // Text sprites that say "TIME".
+    bn::vector<bn::sprite_ptr, 5> goal_or_limit_header_text;    // Text sprites that say either "GOAL" or "LIMIT".
     bn::vector<bn::sprite_ptr, 32> score_number_sprites;
     bn::vector<bn::sprite_ptr, 4> combo_text_sprites;
     bn::vector<bn::sprite_ptr, 5> timer_sprites;
+    bn::vector<bn::sprite_ptr, 5> goal_or_limit_text;   // Text sprites for the goal/limit value.
     bn::sprite_ptr spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
     bn::sprite_palette_ptr active_palette = spr_selector.palette();
     bn::sprite_palette_ptr inactive_palette = create_palette(16, 16, 16);
@@ -99,8 +103,10 @@ public:
     game_controller()
     {
         text_generator.set_left_alignment();
-        score_text_sprites.clear();
-        text_generator.generate(+70, -70, "SCORE", score_text_sprites);   // TODO: Fix Y position to align with gems border when added.
+        text_generator.generate(+70, -71, "SCORE", score_header_text);   // TODO: Fix Y position to align with gems border when added.
+        text_generator.generate(+70, -50, "COMBO", combo_header_text);
+        text_generator.generate(+70, +40, "TIME", time_header_text);
+        // LIMIT/GOAL text is generated in newgame function.
         text_generator.set_right_alignment();
 
         text_generator_small.set_center_alignment();
@@ -127,7 +133,11 @@ public:
 
     void hide()
     {
-        for (auto s : score_text_sprites) { s.set_visible(false); }
+        for (auto s : score_header_text) { s.set_visible(false); }
+        for (auto s : combo_header_text) { s.set_visible(false); }
+        for (auto s : time_header_text) { s.set_visible(false); }
+        for (auto s : goal_or_limit_header_text) { s.set_visible(false); }
+        for (auto s : goal_or_limit_text) { s.set_visible(false); }
         for (auto s : timer_sprites) { s.set_visible(false); }
         for (auto ft : floating_texts) { ft.set_visible(false); }
         if (countdown_number_sprite.has_value()) { countdown_number_sprite.value().set_visible(false); }
@@ -140,7 +150,11 @@ public:
 
     void show()
     {
-        for (auto s : score_text_sprites) { s.set_visible(true); }
+        for (auto s : score_header_text) { s.set_visible(true); }
+        for (auto s : combo_header_text) { s.set_visible(true); }
+        for (auto s : time_header_text) { s.set_visible(true); }
+        for (auto s : goal_or_limit_header_text) { s.set_visible(true); }
+        for (auto s : goal_or_limit_text) { s.set_visible(true); }
         for (auto ft : floating_texts) { ft.set_visible(true); }
 
         spr_selector.set_visible(true);
@@ -173,6 +187,15 @@ public:
         this->level = _level;
         this->score_goal = mode == game_mode::sprint ? levels::sprint[level] : 0;
         this->time_limit_frames = mode == game_mode::timeattack ? levels::timeattack[level] : 0;
+
+        goal_or_limit_header_text.clear();
+        text_generator.set_left_alignment();
+        text_generator.generate(+70, +61, mode == game_mode::sprint ? "GOAL" : "LIMIT", goal_or_limit_header_text);
+        text_generator.set_right_alignment();
+
+        goal_or_limit_text.clear();
+        auto goal_limit_value = mode == game_mode::sprint ? bn::to_string<5>(score_goal) : util::frames_to_time_string(time_limit_frames);
+        text_generator.generate(+116, +70, goal_limit_value, goal_or_limit_text);
     }
 
     // Returns true if game is complete, based on different conditions depending on game mode.
@@ -351,15 +374,15 @@ public:
         // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
         // 6 characters can fit, before overflowing onto the game board.
         score_number_sprites.clear();
-        text_generator.generate(+116, -55 + (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
+        text_generator.generate(+116, -64 + (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
 
         combo_text_sprites.clear();
-        text_generator.generate(+116, +35, bn::format<4>("x{}", combo), combo_text_sprites);
+        text_generator.generate(+116, -41, bn::format<4>("x{}", combo), combo_text_sprites);
         
         auto time_str = util::frames_to_time_string(timer_frames);
 
         timer_sprites.clear();
-        text_generator.generate(+116, +69, time_str, timer_sprites);
+        text_generator.generate(+116, +49, time_str, timer_sprites);
 
         if (start_countdown_timer_frames == 0)
         {

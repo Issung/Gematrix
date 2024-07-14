@@ -57,6 +57,7 @@ struct sram_data
     
     // Arrays of arrays, for level selection, then records.
     // Levels (0 - 2), 0 is the lowest/fastest level, going upwards from there.
+    // Records (0 - 4), 0 is the best score and worsens from there.
     bn::array<SPRINT_RECORD_LIST, LEVELS> records_sprint;
     bn::array<TIMEATTACK_RECORD_LIST, LEVELS> records_timeattack; // Scores for timeattack mode, [0] is the highest score.
 

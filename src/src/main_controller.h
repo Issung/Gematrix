@@ -20,24 +20,27 @@ private:
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
     bn::sprite_palette_ptr palette_highlight = gj::fixed_32x64_sprite_font.item().palette_item().create_palette();
     bn::sprite_palette_ptr palette_grey = create_palette(16, 16, 16);
-    bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT> menu_title_sprites;
+    bn::vector<bn::sprite_ptr, LONGEST_MENU_TITLE> menu_title_sprites;
     bn::vector<bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT>, MAX_OPTIONS_PER_SCREEN> menu_options_sprites;
 
     menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
-    menu play_menu = menu("PLAY", &main_menu);
+    menu play_menu = menu("PLAY", &main_menu);  // Game start mode selection.
     menu play_levels_menu = menu("LEVEL", &play_menu);  // After the user selects a mode on the `play_menu`, they select the level on this one.
-    menu records_menu = menu("RECORDS", &main_menu);
-    menu records_sprint_menu = menu("RECORDS (SPRINT)", &records_menu);
-    menu records_timeattack_menu = menu("RECORDS (TIMEATTACK)", &records_menu);
-    menu settings_menu = menu("SETTINGS", &main_menu);  // [0] = SFX, [1] = MUSIC
-    menu pause_menu = menu("PAUSE");
-    menu gameover_menu = menu("GAMEOVER", &main_menu);
+    menu records_menu = menu("RECORDS", &main_menu);    // Record viewing game mode selection.
+    menu records_levels_menu = menu("RECORDS LEVEL", &records_menu);    // Menu used for record level select, is altered to be used for different modes.
+    menu records_display_menu = menu("X RECORDS", &records_levels_menu);    // Menu used for record list display, is altered to be used for different modes/levels.
+    menu settings_menu = menu("SETTINGS", &main_menu);  // Options: [0] = SFX, [1] = MUSIC.
+    menu pause_menu = menu("PAUSE");    // Pause menu used in game.
+    menu gameover_menu = menu("GAMEOVER", &main_menu);  // Gameover menu used when user's score was not a record. Hiscore entry is its own state.
     menu* current_menu = &main_menu;
 
-    // The user's desired game mode when on the `play_levels_menu`.
-    game_mode play_mode;
+    // The user's desired game mode when on the `play_levels_menu` or `records_levels_menu`.
+    game_mode levels_mode;
     bn::string_view sprint_levels_menu_title = "GOAL SCORE";
     bn::string_view timeattack_levels_menu_title = "TIME LIMIT";
+    bn::string_view sprint_records_levels_menu_title = "SPRINT RECORDS";
+    bn::string_view timeattack_records_levels_menu_title = "TIMEATTACK RECORDS";
+    bn::string<LONGEST_MENU_TITLE> records_display_menu_title_text = "";    // Title text for the records display menu. As `menu` uses a string view for the title this has to be stored somewhere constant.
 
     void generate_options_text()
     {
@@ -180,7 +183,7 @@ private:
             // MENU: PLAY
             else if (key == menu_option_key::play_sprint)
             {
-                play_mode = game_mode::sprint;
+                levels_mode = game_mode::sprint;
 
                 play_levels_menu.title = sprint_levels_menu_title;
                 play_levels_menu.options.clear();
@@ -192,7 +195,7 @@ private:
             }
             else if (key == menu_option_key::play_timeattack)
             {
-                play_mode = game_mode::timeattack;
+                levels_mode = game_mode::timeattack;
 
                 play_levels_menu.title = timeattack_levels_menu_title;
                 play_levels_menu.options.clear();
@@ -204,50 +207,58 @@ private:
             }
 
             // MENU: PLAY LEVEL SELECT
-            else if (key == menu_option_key::play_level0)
+            else if (key >= menu_option_key::play_level0 && key <= menu_option_key::play_level2)
             {
-                gc.newgame(play_mode, 0);
-                change_state(game_state::ingame);
-            }
-            else if (key == menu_option_key::play_level1)
-            {
-                gc.newgame(play_mode, 1);
-                change_state(game_state::ingame);
-            }
-            else if (key == menu_option_key::play_level2)
-            {
-                gc.newgame(play_mode, 2);
+                auto level = (ubyte)key - (ubyte)menu_option_key::play_level0;
+                gc.newgame(levels_mode, level);
                 change_state(game_state::ingame);
             }
 
             // MENU: RECORDS
-            // TODO: All been broken by record levels
-            /*else if (key == menu_option_key::records_sprint)
-            {   
-                records_sprint_menu.options.clear();
-                for (int i = 0; i < MAX_RECORDS; ++i)
+            else if (key == menu_option_key::records_sprint || key == menu_option_key::records_timeattack)
+            {
+                auto is_sprint = key == menu_option_key::records_sprint;
+                levels_mode = is_sprint ? game_mode::sprint : game_mode::timeattack;
+
+                records_levels_menu.title = is_sprint ? sprint_records_levels_menu_title : timeattack_records_levels_menu_title;
+                records_levels_menu.options.clear();
+
+                for (ubyte i = 0; i < LEVELS; ++i)
                 {
-                    auto record = memory::save_data.records_sprint[i];
-                    auto name = bn::string<RECORD_NAME_LENGTH>(record.name.data(), RECORD_NAME_LENGTH);
-                    auto str = bn::format<menu_option::TEXT_MAX_LENGTH>("{} {}", name, util::frames_to_time_millis_string(record.time_in_frames));
-                    BN_LOG(str);
-                    records_sprint_menu.options.push_back(menu_option(str, menu_option_key::noop));
+                    auto text = is_sprint ? bn::to_string<5>(levels::sprint[i]) : util::frames_to_time_string(levels::timeattack[i]);
+                    auto ke = (menu_option_key)((ubyte)menu_option_key::records_level0 + i);
+                    records_levels_menu.options.push_back(menu_option(text, ke));
                 }
-                change_menu(&records_sprint_menu);
+
+                change_menu(&records_levels_menu);
             }
-            else if (key == menu_option_key::records_timeattack)
-            {   
-                records_timeattack_menu.options.clear();
+
+            // MENU: RECORDS LEVEL SELECT
+            else if (key >= menu_option_key::records_level0 && key <= menu_option_key::records_level2)
+            {
+                auto level = (ubyte)key - (ubyte)menu_option_key::records_level0;
+
+                auto mode_text = levels_mode == game_mode::sprint ? "SPRINT" : "TIMEATTACK";
+                auto level_text = levels_mode == game_mode::sprint ? bn::to_string<5>(levels::sprint[level]) : util::frames_to_time_string(levels::timeattack[level]);
+                records_display_menu_title_text = bn::format<18>("{} ({})", mode_text, level_text); // Longest string is "TIMEATTACK (00:00)"
+                records_display_menu.title = records_display_menu_title_text;
+
+                records_display_menu.options.clear();
                 for (int i = 0; i < MAX_RECORDS; ++i)
                 {
-                    auto record = memory::save_data.records_timeattack[i];
-                    auto name = bn::string<RECORD_NAME_LENGTH>(record.name.data(), RECORD_NAME_LENGTH);
-                    auto str = bn::format<menu_option::TEXT_MAX_LENGTH>("{} {}", name, record.score);
+                    auto is_sprint = levels_mode == game_mode::sprint;
+
+                    auto name = is_sprint ? memory::save_data.records_sprint[level][i].name : memory::save_data.records_timeattack[level][i].name;
+                    auto metric = is_sprint ? memory::save_data.records_sprint[level][i].time_in_frames : memory::save_data.records_timeattack[level][i].score;
+
+                    auto name_str = bn::string<RECORD_NAME_LENGTH>(name.data(), RECORD_NAME_LENGTH);
+                    auto metric_text = is_sprint ? util::frames_to_time_millis_string(metric) : bn::to_string<8>(metric);
+                    auto str = bn::format<menu_option::TEXT_MAX_LENGTH>("{} {}", name_str, metric_text);
                     BN_LOG(str);
-                    records_timeattack_menu.options.push_back(menu_option(str, menu_option_key::noop));
+                    records_display_menu.options.push_back(menu_option(str, menu_option_key::noop));
                 }
-                change_menu(&records_timeattack_menu);
-            }*/
+                change_menu(&records_display_menu);
+            }
 
             // MENU: SETTINGS
             else if (key == menu_option_key::sfx_toggle)

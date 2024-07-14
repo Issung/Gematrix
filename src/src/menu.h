@@ -6,8 +6,9 @@
 #include "bn_optional.h"
 #include "util.h"
 
-constexpr static int LONGEST_OPTION_TEXT = 11;
-constexpr static int MAX_OPTIONS_PER_SCREEN = 5;
+constexpr static int LONGEST_MENU_TITLE = 21;       // Length of the longest menu title: "RECORDS (TIMEATTACK)".
+constexpr static int LONGEST_OPTION_TEXT = 11;      // Length of the longest menu option text.
+constexpr static int MAX_OPTIONS_PER_SCREEN = 5;    // Maximum amount of options per menu.
 
 // A menu contains a title, options and optionally a reference to a previous menu.
 class menu

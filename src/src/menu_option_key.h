@@ -1,6 +1,8 @@
 #pragma once
 
-enum class menu_option_key
+#include "util.h"
+
+enum class menu_option_key : ubyte
 {
     // Key can be used for options that don't do shit.
     noop,
@@ -23,6 +25,11 @@ enum class menu_option_key
     // Records Menu
     records_sprint,
     records_timeattack,
+
+    // Records Menu (Level Select)
+    records_level0,
+    records_level1,
+    records_level2,
 
     // Settings Menu
     music_toggle,

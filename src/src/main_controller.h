@@ -9,6 +9,8 @@
 #include "bn_string.h"
 #include "highscore_entry_controller.h"
 
+#define TITLE_Y -55
+
 class main_controller
 {
 private:
@@ -21,6 +23,9 @@ private:
     bn::sprite_palette_ptr palette_grey = create_palette(16, 16, 16);
     bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT> menu_title_sprites;
     bn::vector<bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT>, MAX_OPTIONS_PER_SCREEN> menu_options_sprites;
+    bn::fixed title_sin_angle;
+    bn::fixed title_sin_angle_inc = 5;
+
     menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
     menu play_menu = menu("PLAY", &main_menu);
     menu records_menu = menu("RECORDS", &main_menu);
@@ -68,7 +73,9 @@ private:
         {
             // Title
             menu_title_sprites.clear();
-            text_generator.generate(0, -50, current_menu->title, menu_title_sprites);
+            text_generator.set_one_sprite_per_character(true);  // Generate one sprite per char so we can sin-wave them.
+            text_generator.generate(0, TITLE_Y, current_menu->title, menu_title_sprites);
+            text_generator.set_one_sprite_per_character(false); // Set it back so other stuff doesn't have to worry about it.
 
             // Options
             generate_options_text();
@@ -118,10 +125,37 @@ private:
         }
     }
 
+    // Technique stolen from examples/text/main.cpp:sprite_per_character_text_scene().
+    void sin_wave_title()
+    {
+        title_sin_angle += title_sin_angle_inc;
+
+        if(title_sin_angle >= 360)
+        {
+            title_sin_angle -= 360;
+        }
+
+        bn::fixed local_angle = title_sin_angle;
+
+        for(auto& character_sprite : menu_title_sprites)
+        {
+            local_angle += title_sin_angle_inc;
+
+            if (local_angle >= 360)
+            {
+                local_angle -= 360;
+            }
+
+            character_sprite.set_y(TITLE_Y + bn::degrees_lut_sin(local_angle) * 4);
+        }
+    }
+
     void update_menus()
     {
         //hec.update();
         //return;
+
+        sin_wave_title();
 
         for (int i = 0; i < current_menu->options.size(); ++i)
         {

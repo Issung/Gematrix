@@ -6,7 +6,7 @@
     * Usenti
     * SonOfGoran
     * devkitPro
-* 321 Countdown to game start
+* ~~321 Countdown to game start~~
 * Sprites
     * Gems
     * Game logo
@@ -34,8 +34,10 @@
     * ~~Menu viewing screen~~
         * Variants
 * ~~Titles at top of menus~~
-    * Bigger font?
-    * Animate title (wobble effect from examples)
+    * Bigger font? (Also in examples)
+    * Fix grey palette for non-highlighted options.
+    * Fix positioning for menus with even amount of options.
+    * ~~Animate title (wobble effect from examples)~~
 * Music
 * SFX
     * Swap sound

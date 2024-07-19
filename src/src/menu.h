@@ -6,8 +6,10 @@
 #include "bn_optional.h"
 #include "util.h"
 
+constexpr static int LONGEST_TITLE_TEXT = 20;   // RECORDS (TIMEATTACK)
 constexpr static int LONGEST_OPTION_TEXT = 11;
 constexpr static int MAX_OPTIONS_PER_SCREEN = 5;
+constexpr static sbyte OPTIONS_Y_GAP = 20;    // Y position gap between menu options
 
 // A menu contains a title, options and optionally a reference to a previous menu.
 class menu
@@ -38,15 +40,28 @@ public:
 
     }
 
+    // Get the amount of options to draw.
     ubyte get_options_count()
     {
         auto count = options_count.has_value() ? options_count.value() : (ubyte)options.size();
         return count;
     }
 
+    // Get the y position the first menu option should be drawn at (going downwards from there).
     sbyte get_y_position()
     {
-        auto position = options_y_position.has_value() ? options_y_position.value() : (sbyte)-20;   // The default here on the end.
-        return position;
+        if (options_y_position.has_value())
+        {
+            return options_y_position.value();
+        }
+
+        // Desired y start positions (increments of half of OPTIONS_Y_GAP):
+        //  1 item: 0
+        //  2 items: -10
+        //  3 items: -20
+        //  4 items: -30
+        //  5 items: -25 (break the formula because it gets too close to the title).
+        auto oc = get_options_count();
+        return oc == 5 ? -25 : -((oc - 1) * (OPTIONS_Y_GAP / 2));
     }
 };

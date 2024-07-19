@@ -21,7 +21,7 @@ private:
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
     bn::sprite_palette_ptr palette_highlight = gj::fixed_32x64_sprite_font.item().palette_item().create_palette();
     bn::sprite_palette_ptr palette_grey = create_palette(16, 16, 16);
-    bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT> menu_title_sprites;
+    bn::vector<bn::sprite_ptr, LONGEST_TITLE_TEXT> menu_title_sprites;
     bn::vector<bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT>, MAX_OPTIONS_PER_SCREEN> menu_options_sprites;
     bn::fixed title_sin_angle;
     bn::fixed title_sin_angle_inc = 5;

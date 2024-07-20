@@ -13,7 +13,7 @@ public:
     bn::string<TEXT_MAX_LENGTH> text;    // Text to display on screen for this menu item.
     menu_option_key key;   // Key to identify the option by so that when selected appropriate actions can be taken.
     
-    menu_option(bn::string_view _text, menu_option_key _key) : text(_text), key(_key)
+    menu_option(bn::string<TEXT_MAX_LENGTH> _text, menu_option_key _key) : text(_text), key(_key)
     {
 
     }

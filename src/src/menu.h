@@ -15,7 +15,7 @@ constexpr static sbyte OPTIONS_Y_GAP = 20;    // Y position gap between menu opt
 class menu
 {
 public:
-    // We use string_view here because 
+    // We use string_view here because
     bn::string_view title;
     menu* previous_menu = nullptr;
     bn::vector<menu_option, MAX_OPTIONS_PER_SCREEN> options;

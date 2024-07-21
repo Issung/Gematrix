@@ -9,6 +9,10 @@
 #include "bn_string.h"
 #include "highscore_entry_controller.h"
 #include "game_mode.h"
+#include "bn_sound.h"
+#include "bn_music.h"
+#include "sound_util.h"
+#include "music_util.h"
 
 #define TITLE_Y -55
 
@@ -53,7 +57,6 @@ private:
             menu_options_sprites[i].clear();
         }
 
-        // TODO: Position options nicely, and also obeying optional y position in menu.
         auto size = current_menu->get_options_count();
         auto y_pos = current_menu->get_y_position();
         for (int i = 0; i < size; ++i)
@@ -104,14 +107,14 @@ private:
         }
         else if (state == game_state::paused)
         {
-            if (bn::music::playing()) bn::music::pause();
+            music_util::maybe_pause();
             bn::sound_items::pause.play();
             gc.hide();
             change_menu(&pause_menu);
         }
         else if (state == game_state::ingame)
         {
-            if (bn::music::paused()) bn::music::resume();
+            music_util::maybe_resume();
             change_menu(nullptr);
             gc.show();
         }
@@ -311,14 +314,20 @@ private:
             else if (key == menu_option_key::sfx_toggle)
             {
                 auto new_setting = !memory::sfx_enabled();
+                sound_util::set_sound_enabled(new_setting);
                 memory::sfx_enabled_set(new_setting);
                 memory::save();
                 settings_menu.options[0].text = new_setting ? "SFX ON" : "SFX OFF";
                 generate_options_text();
+                bn::sound_items::menu_ok.play();
             }
             else if (key == menu_option_key::music_toggle)
             {
                 auto new_setting = !memory::music_enabled();
+                if (!new_setting)
+                {
+                    music_util::maybe_stop();
+                }
                 memory::music_enabled_set(new_setting);
                 memory::save();
                 settings_menu.options[1].text = new_setting ? "MUSIC ON" : "MUSIC OFF";
@@ -332,14 +341,14 @@ private:
             }
             else if (key == menu_option_key::restart)
             {
-                bn::music::stop();
+                music_util::maybe_stop();
                 gc.reset();
                 change_state(game_state::ingame);
             }
             else if (key == menu_option_key::quit)
             {
                 change_state(game_state::menus);
-                bn::music::stop();
+                music_util::maybe_stop();
                 bn::sound_items::menu_ok.play();
             }
         }
@@ -364,13 +373,11 @@ public:
 
                     if (is_record)
                     {
-                        // TODO: Display user's score.
                         change_state(game_state::hiscore);
                     }
                     else
                     {
                         change_state(game_state::menus);
-                        // TODO: Display user's gamemode & score to them
                         change_menu(&gameover_menu);
 
                         while (gameover_menu.options.size() > 2)

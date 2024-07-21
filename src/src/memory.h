@@ -9,6 +9,9 @@
 #include "bn_log.h"
 #include "bn_list.h"
 #include "util.h"
+#include "bn_sound.h"
+#include "bn_music.h"
+#include "sound_util.h"
 
 #define FORMAT_TAG "BABABOOEY"  // Expected character sequence to determine if SRAM is formatted or not.
 #define FORMAT_TAG_LENGTH 9 // Length of the above format tag.
@@ -149,6 +152,8 @@ public:
     static void init()
     {
         bn::sram::read(save_data);
+
+        sound_util::set_sound_enabled(save_data.enable_sfx);
 
         bn::array<char, 10> expected_format_tag;
         bn::istring_base expected_format_tag_istring(expected_format_tag._data);

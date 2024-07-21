@@ -44,6 +44,7 @@
 #include "util.h"
 #include "game_mode.h"
 #include "levels.h"
+#include "music_util.h"
 
 #define HEADER_X +70    // x position for headers, with left-align generation.
 #define VALUE_X +116    // x position for values, with right-align generation.
@@ -235,7 +236,7 @@ public:
             else if (start_countdown_timer_frames == 1)
             {
                 bn::sound_items::countdown_finish_beep.play();
-                bn::music_items::cirno.play(0.25);
+                music_util::maybe_play(bn::music_items::cirno);
             }
 
             --start_countdown_timer_frames;

@@ -279,9 +279,9 @@ public:
 
             bool created_animation_positions[board::rows][board::cols] = {};    // {} initialises all values to false.
 
-            for (auto m : matches)
+            for (auto& m : matches)
             {
-                for (auto pos : m.positions)
+                for (auto& pos : m.positions)
                 {
                     // If we haven't already created a animation for the gem at this position.
                     // This could happen if a single gem is used within 2 matches.
@@ -310,7 +310,7 @@ public:
         current_state = drawer_state::DroppingGems;
 
         // Create animation for each drop.
-        for (auto drop : drops)
+        for (auto& drop : drops)
         {
             auto spr = gem_sprites[(drop.to_row * board::cols) + drop.col];
             auto palette = colors[(uint8_t)drop.type];

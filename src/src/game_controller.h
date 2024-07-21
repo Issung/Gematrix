@@ -89,9 +89,7 @@ private:
     {
         for(auto it = floating_texts.begin(), end = floating_texts.end(); it != end;)
         {
-            floating_text& ft = *it;
-
-            if(ft.update())
+            if(it->update())
             {
                 floating_texts.erase(it);
                 end = floating_texts.end();
@@ -137,13 +135,13 @@ public:
 
     void hide()
     {
-        for (auto s : score_header_text) { s.set_visible(false); }
-        for (auto s : combo_header_text) { s.set_visible(false); }
-        for (auto s : time_header_text) { s.set_visible(false); }
-        for (auto s : goal_or_limit_header_text) { s.set_visible(false); }
-        for (auto s : goal_or_limit_text) { s.set_visible(false); }
-        for (auto s : timer_sprites) { s.set_visible(false); }
-        for (auto ft : floating_texts) { ft.set_visible(false); }
+        for (auto& s : score_header_text) { s.set_visible(false); }
+        for (auto& s : combo_header_text) { s.set_visible(false); }
+        for (auto& s : time_header_text) { s.set_visible(false); }
+        for (auto& s : goal_or_limit_header_text) { s.set_visible(false); }
+        for (auto& s : goal_or_limit_text) { s.set_visible(false); }
+        for (auto& s : timer_sprites) { s.set_visible(false); }
+        for (auto& ft : floating_texts) { ft.set_visible(false); }
         if (countdown_number_sprite.has_value()) { countdown_number_sprite.value().set_visible(false); }
         
         score_number_sprites.clear();
@@ -154,12 +152,12 @@ public:
 
     void show()
     {
-        for (auto s : score_header_text) { s.set_visible(true); }
-        for (auto s : combo_header_text) { s.set_visible(true); }
-        for (auto s : time_header_text) { s.set_visible(true); }
-        for (auto s : goal_or_limit_header_text) { s.set_visible(true); }
-        for (auto s : goal_or_limit_text) { s.set_visible(true); }
-        for (auto ft : floating_texts) { ft.set_visible(true); }
+        for (auto& s : score_header_text) { s.set_visible(true); }
+        for (auto& s : combo_header_text) { s.set_visible(true); }
+        for (auto& s : time_header_text) { s.set_visible(true); }
+        for (auto& s : goal_or_limit_header_text) { s.set_visible(true); }
+        for (auto& s : goal_or_limit_text) { s.set_visible(true); }
+        for (auto& ft : floating_texts) { ft.set_visible(true); }
 
         spr_selector.set_visible(true);
         bd.show();
@@ -324,7 +322,7 @@ public:
             {
                 auto matches = b.delete_matches();
 
-                for (auto m : matches)
+                for (auto& m : matches)
                 {
                     // TODO: Score adjustments:
                     // - Should each gem be worth worth its match size? E.g. A 4-of-a-kind each gem gives 4 points?
@@ -337,7 +335,7 @@ public:
 
                     // TODO: Small innacuracy in displayed floating scores when 1 gem is used in 2 matches, the user
                     // only sees the top-most point for a single match.
-                    for (auto p : m.positions)
+                    for (auto& p : m.positions)
                     {
                         auto palette = bd.colors[(uint8_t)m.type];
                         auto ft = floating_text(positions[p.row][p.col], palette, points_per_gem);

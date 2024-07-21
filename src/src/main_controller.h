@@ -162,10 +162,24 @@ private:
 
     void update_menus()
     {
-        //hec.update();
-        //return;
-
         sin_wave_title();
+
+        // Records display menu is not interactable.
+        auto menu_interactable = current_menu != &records_display_menu;
+
+        if (bn::keypad::b_pressed())
+        {
+            if (current_menu->previous_menu != nullptr)
+            {
+                change_menu(current_menu->previous_menu);
+                bn::sound_items::menu_back.play();
+            }
+        }
+
+        if (!menu_interactable)
+        {
+            return;
+        }
 
         for (int i = 0; i < current_menu->options.size(); ++i)
         {
@@ -327,14 +341,6 @@ private:
                 change_state(game_state::menus);
                 bn::music::stop();
                 bn::sound_items::menu_ok.play();
-            }
-        }
-        else if (bn::keypad::b_pressed())
-        {
-            if (current_menu->previous_menu != nullptr)
-            {
-                change_menu(current_menu->previous_menu);
-                bn::sound_items::menu_back.play();
             }
         }
     }

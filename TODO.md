@@ -16,41 +16,44 @@
 * ~~Don't generate board with matches~~
     * Optimise
 * Implement gamemodes
-    * Sprint
-        * Variants (300 points, 1000 points, 5000 points)
-    * Time Attack
-        * Variants (1 min, 3 mins, 5 mins)
+    * ~~Sprint~~
+        * ~~Variants (300 points, 1000 points, 5000 points)~~
+    * ~~Time Attack~~
+        * ~~Variants (1 min, 3 mins, 5 mins)~~
     * Survival
         * Difficulties?
-    * Completion screen
-        * New hiscore name entry
-    * In-game UI changes depending on mode.
+    * ~~Completion screen~~
+        * Fade in to completion screen somehow so it's not so abrubt
+        * ~~New hiscore name entry~~
+    * ~~In-game UI changes depending on mode.~~
 * Implement hi-scores
-    * Sprint variants
-    * Time Attack variants
+    * ~~Sprint variants~~
+    * ~~Time Attack variants~~
     * Survival
     * ~~Saving to SRAM~~
     * ~~Name entry~~
     * ~~Menu viewing screen~~
-        * Variants
+        * ~~Variants~~
 * ~~Titles at top of menus~~
     * Bigger font? (Also in examples)
     * Fix grey palette for non-highlighted options.
-    * Fix positioning for menus with even amount of options.
+    * ~~Fix positioning for menus with even amount of options.~~
     * ~~Animate title (wobble effect from examples)~~
 * Music
 * SFX
-    * Swap sound
-    * Match sound
+    * ~~Swap sound~~
+        * Change it
+    * ~~Match sound~~
         * 4-of-a-kind variant
         * 5-of-a-kind variant
-    * Match pitches increasing for combos
+        * Match pitches increasing for combos
     * Score increasing sound
 * Juice
     * ~~Game start board drop-in animations~~
         * Add more variants
         * Refactor code to have drop-in animations creation class that returns a 2d array of ints, representing the order for each gem to drop in.
-    * +N floating text for matches
+    * ~~+N floating text for matches~~
+        * Change color of text to match gems
     * Screenshake for combos
     * Background animation / flashing
     * Pointfeeds on the right

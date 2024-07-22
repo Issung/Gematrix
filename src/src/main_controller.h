@@ -16,6 +16,13 @@
 
 #define TITLE_Y -55
 
+enum class menu_sound
+{
+    ok,
+    back,
+    none,
+};
+
 class main_controller
 {
 private:
@@ -66,7 +73,7 @@ private:
     }
 
     // Set to `nullptr` to hide menu.
-    void change_menu(menu* new_menu)
+    void change_menu(menu* new_menu, menu_sound sound)
     {
         current_menu = new_menu;
         selected_index = 0;
@@ -93,6 +100,9 @@ private:
             // Options
             generate_options_text();
         }
+
+        if (sound == menu_sound::ok) { bn::sound_items::menu_ok.play(); }
+        else if (sound == menu_sound::back) { bn::sound_items::menu_back.play(); }
     }
 
     void change_state(game_state new_state)
@@ -101,7 +111,7 @@ private:
 
         if (state == game_state::menus)
         {
-            change_menu(&main_menu);
+            change_menu(&main_menu, menu_sound::none);
             hec.hide();
             gc.hide();
         }
@@ -110,17 +120,17 @@ private:
             music_util::maybe_pause();
             bn::sound_items::pause.play();
             gc.hide();
-            change_menu(&pause_menu);
+            change_menu(&pause_menu, menu_sound::none);
         }
         else if (state == game_state::ingame)
         {
             music_util::maybe_resume();
-            change_menu(nullptr);
+            change_menu(nullptr, menu_sound::ok);
             gc.show();
         }
         else if (state == game_state::hiscore)
         {
-            change_menu(nullptr);
+            change_menu(nullptr, menu_sound::none);
             gc.hide();
 
             auto record_position = memory::is_record(gc.get_mode(), gc.get_level(), gc.get_gamemode_metric());
@@ -174,8 +184,7 @@ private:
         {
             if (current_menu->previous_menu != nullptr)
             {
-                change_menu(current_menu->previous_menu);
-                bn::sound_items::menu_back.play();
+                change_menu(current_menu->previous_menu, menu_sound::back);
             }
         }
 
@@ -216,18 +225,15 @@ private:
             // MENU: MAIN
             if (key == menu_option_key::play)
             {
-                change_menu(&play_menu);
-                bn::sound_items::menu_ok.play();
+                change_menu(&play_menu, menu_sound::ok);
             }
             else if (key == menu_option_key::records)
             {
-                change_menu(&records_menu);
-                bn::sound_items::menu_ok.play();
+                change_menu(&records_menu, menu_sound::ok);
             }
             else if (key == menu_option_key::settings)
             {
-                change_menu(&settings_menu);
-                bn::sound_items::menu_ok.play();
+                change_menu(&settings_menu, menu_sound::ok);
             }
 
             // MENU: PLAY
@@ -241,7 +247,7 @@ private:
                 play_levels_menu.options.push_back(menu_option(bn::to_string<5>(levels::sprint[1]), menu_option_key::play_level1));
                 play_levels_menu.options.push_back(menu_option(bn::to_string<5>(levels::sprint[2]), menu_option_key::play_level2));
 
-                change_menu(&play_levels_menu);
+                change_menu(&play_levels_menu, menu_sound::ok);
             }
             else if (key == menu_option_key::play_timeattack)
             {
@@ -253,7 +259,7 @@ private:
                 play_levels_menu.options.push_back(menu_option(util::frames_to_time_string(levels::timeattack[1]), menu_option_key::play_level1));
                 play_levels_menu.options.push_back(menu_option(util::frames_to_time_string(levels::timeattack[2]), menu_option_key::play_level2));
 
-                change_menu(&play_levels_menu);
+                change_menu(&play_levels_menu, menu_sound::ok);
             }
 
             // MENU: PLAY LEVEL SELECT
@@ -280,7 +286,7 @@ private:
                     records_levels_menu.options.push_back(menu_option(text, ke));
                 }
 
-                change_menu(&records_levels_menu);
+                change_menu(&records_levels_menu, menu_sound::ok);
             }
 
             // MENU: RECORDS LEVEL SELECT
@@ -307,7 +313,7 @@ private:
                     BN_LOG(str);
                     records_display_menu.options.push_back(menu_option(str, menu_option_key::noop));
                 }
-                change_menu(&records_display_menu);
+                change_menu(&records_display_menu, menu_sound::ok);
             }
 
             // MENU: SETTINGS
@@ -332,6 +338,7 @@ private:
                 memory::save();
                 settings_menu.options[1].text = new_setting ? "MUSIC ON" : "MUSIC OFF";
                 generate_options_text();
+                bn::sound_items::menu_ok.play();
             }
 
             // MENU: PAUSE
@@ -349,7 +356,6 @@ private:
             {
                 change_state(game_state::menus);
                 music_util::maybe_stop();
-                bn::sound_items::menu_ok.play();
             }
         }
     }
@@ -378,7 +384,7 @@ public:
                     else
                     {
                         change_state(game_state::menus);
-                        change_menu(&gameover_menu);
+                        change_menu(&gameover_menu, menu_sound::none);
 
                         while (gameover_menu.options.size() > 2)
                         {
@@ -454,6 +460,6 @@ public:
         gameover_menu.options_count = 2;
         gameover_menu.options_y_position = 30;
 
-        change_menu(&main_menu);
+        change_menu(&main_menu, menu_sound::none);
     }
 };

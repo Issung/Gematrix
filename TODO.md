@@ -46,7 +46,7 @@
     * ~~Match sound~~
         * 4-of-a-kind variant
         * 5-of-a-kind variant
-        * Match pitches increasing for combos
+        * ~~Match pitches increasing for combos~~
     * Score increasing sound
 * Juice
     * ~~Game start board drop-in animations~~

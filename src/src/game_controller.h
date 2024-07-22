@@ -48,6 +48,7 @@
 
 #define HEADER_X +70    // x position for headers, with left-align generation.
 #define VALUE_X +116    // x position for values, with right-align generation.
+#define MATCH_SOUNDS_LEN 5  // The amount of unique match sounds.
 
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class game_controller
@@ -75,6 +76,15 @@ private:
     bool displayed_score_bump = false;  // Bump the score display Y every frame it increments.
     int start_countdown_timer_frames = 0;    // How many frames remain until the game starts.
     bool animating = false;
+
+    // Sound items for matches, increasing in pitch, use higher numbers for combos.
+    bn::sound_item match_sounds[MATCH_SOUNDS_LEN] = {
+        bn::sound_items::match1,
+        bn::sound_items::match2,
+        bn::sound_items::match3,
+        bn::sound_items::match4,
+        bn::sound_items::match5,
+    };
     
     // Game mode variables.
     game_mode mode;
@@ -331,8 +341,6 @@ public:
                     auto points_for_match = points_per_gem * m.positions.size();
                     score += points_for_match;
                     
-                    bn::sound_items::match.play();
-
                     // TODO: Small innacuracy in displayed floating scores when 1 gem is used in 2 matches, the user
                     // only sees the top-most point for a single match.
                     for (auto& p : m.positions)
@@ -341,6 +349,12 @@ public:
                         auto ft = floating_text(positions[p.row][p.col], palette, points_per_gem);
                         floating_texts.push_back(ft);
                     }
+                }
+
+                if (!matches.empty())
+                {
+                    auto& sound = match_sounds[bn::min(combo - 1, MATCH_SOUNDS_LEN - 1)];
+                    sound.play();
                 }
 
                 bd.play_matches(matches);

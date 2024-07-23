@@ -380,6 +380,11 @@ public:
         displayed_score_bump = false;
         if (displayed_score < score)
         {
+            if (displayed_score % 2 == 0)
+            {
+                bn::sound_items::point.play();
+            }
+            
             ++displayed_score;
         }
         else if (!displayed_score_bump) // Equal
@@ -388,9 +393,10 @@ public:
         }
 
         // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
-        // 6 characters can fit, before overflowing onto the game board.
+        // 6 characters can fit before overflowing onto the game board.
         score_number_sprites.clear();
-        text_generator.generate(VALUE_X, -64 + (displayed_score_bump ? 2 : 0), bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
+        ubyte jiggle = (displayed_score < score && displayed_score % 2 == 0 ? 1 : 0);    // Jiggle text up and down each frame while displayed score is incrementing.
+        text_generator.generate(VALUE_X, -62 - jiggle, bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
 
         combo_text_sprites.clear();
         text_generator.generate(VALUE_X, -41, bn::format<4>("x{}", combo), combo_text_sprites);

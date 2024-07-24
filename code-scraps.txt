@@ -15,7 +15,7 @@ void redraw_all_gems()
             }
             else
             {
-                auto palette = colors[(uint8_t)gem_value];
+                auto palette = colors[(int)gem_value];
                 gem_sprite.set_palette(palette);
                 gem_sprite.set_visible(true);
             }

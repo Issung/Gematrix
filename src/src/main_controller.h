@@ -265,7 +265,7 @@ private:
             // MENU: PLAY LEVEL SELECT
             else if (key >= menu_option_key::play_level0 && key <= menu_option_key::play_level2)
             {
-                auto level = (ubyte)key - (ubyte)menu_option_key::play_level0;
+                auto level = (int)key - (int)menu_option_key::play_level0;
                 gc.newgame(levels_mode, level);
                 change_state(game_state::ingame);
             }
@@ -279,10 +279,10 @@ private:
                 records_levels_menu.title = is_sprint ? sprint_records_levels_menu_title : timeattack_records_levels_menu_title;
                 records_levels_menu.options.clear();
 
-                for (ubyte i = 0; i < LEVELS; ++i)
+                for (int i = 0; i < LEVELS; ++i)
                 {
                     auto text = is_sprint ? bn::to_string<5>(levels::sprint[i]) : util::frames_to_time_string(levels::timeattack[i]);
-                    auto ke = (menu_option_key)((ubyte)menu_option_key::records_level0 + i);
+                    auto ke = (menu_option_key)((int)menu_option_key::records_level0 + i);
                     records_levels_menu.options.push_back(menu_option(text, ke));
                 }
 
@@ -292,7 +292,7 @@ private:
             // MENU: RECORDS LEVEL SELECT
             else if (key >= menu_option_key::records_level0 && key <= menu_option_key::records_level2)
             {
-                auto level = (ubyte)key - (ubyte)menu_option_key::records_level0;
+                auto level = (int)key - (int)menu_option_key::records_level0;
 
                 auto mode_text = levels_mode == game_mode::sprint ? "SPRINT" : "TIMEATTACK";
                 auto level_text = levels_mode == game_mode::sprint ? bn::to_string<5>(levels::sprint[level]) : util::frames_to_time_string(levels::timeattack[level]);

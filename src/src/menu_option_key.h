@@ -2,7 +2,7 @@
 
 #include "util.h"
 
-enum class menu_option_key : ubyte
+enum class menu_option_key : int
 {
     // Key can be used for options that don't do shit.
     noop,

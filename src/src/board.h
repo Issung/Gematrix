@@ -12,15 +12,15 @@
 class gem_drop
 {
 public:
-    int8_t col;
-    int8_t from_row;
-    int8_t to_row;
+    int col;
+    int from_row;
+    int to_row;
 
     gem_type type;
 
     gem_drop(
-        int8_t _col,
-        int8_t _from_row, int8_t _to_row,
+        int _col,
+        int _from_row, int _to_row,
         gem_type _type
     ) : col(_col),
         from_row(_from_row), to_row(_to_row),
@@ -65,7 +65,7 @@ public:
                 {
                     auto val = gen_new_gem();
                     gems[r][c] = val;
-                    //BN_LOG("Generated gem ", r, ",", c, ": ", (uint8_t)val);
+                    //BN_LOG("Generated gem ", r, ",", c, ": ", (int)val);
                 }
             }
 

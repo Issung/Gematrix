@@ -88,7 +88,7 @@ private:
     
     // Game mode variables.
     game_mode mode;
-    ubyte level;
+    int level;
     int combo = 1;
     int score = 0;
     int timer_frames = 0;   // Amount of update frames since last reset.
@@ -125,14 +125,14 @@ public:
     }
 
     game_mode get_mode() { return mode; }
-    ubyte get_level() { return level; }
+    int get_level() { return level; }
 
     // Get the metric relevant to the current gamemode (either score or frametime).
     int get_gamemode_metric()
     {
         if (mode == game_mode::sprint) { return timer_frames; }
         else if (mode == game_mode::timeattack) { return score; }
-        else { BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode); return 0; }
+        else { BN_ASSERT(false, "Unknown game mode: ", (int)mode); return 0; }
     }
 
     bn::string<8> get_gamemode_metric_display_string()
@@ -140,7 +140,7 @@ public:
         auto metric = get_gamemode_metric();
         if (mode == game_mode::sprint) { return util::frames_to_time_millis_string(metric); }
         else if (mode == game_mode::timeattack) { return bn::to_string<8>(metric); }
-        else { BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode); return bn::to_string<1>(0); }
+        else { BN_ASSERT(false, "Unknown game mode: ", (int)mode); return bn::to_string<1>(0); }
     }
 
     void hide()
@@ -192,7 +192,7 @@ public:
         floating_texts.clear();
     }
 
-    void newgame(game_mode _mode, ubyte _level)
+    void newgame(game_mode _mode, int _level)
     {
         reset();
         this->mode = _mode;
@@ -345,7 +345,7 @@ public:
                     // only sees the top-most point for a single match.
                     for (auto& p : m.positions)
                     {
-                        auto palette = bd.colors[(uint8_t)m.type];
+                        auto palette = bd.colors[(int)m.type];
                         auto ft = floating_text(positions[p.row][p.col], palette, points_per_gem);
                         floating_texts.push_back(ft);
                     }
@@ -395,7 +395,7 @@ public:
         // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
         // 6 characters can fit before overflowing onto the game board.
         score_number_sprites.clear();
-        ubyte jiggle = (displayed_score < score && displayed_score % 2 == 0 ? 1 : 0);    // Jiggle text up and down each frame while displayed score is incrementing.
+        int jiggle = (displayed_score < score && displayed_score % 2 == 0 ? 1 : 0);    // Jiggle text up and down each frame while displayed score is incrementing.
         text_generator.generate(VALUE_X, -62 - jiggle, bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
 
         combo_text_sprites.clear();

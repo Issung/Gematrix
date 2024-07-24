@@ -77,9 +77,9 @@ class memory
 {
 private:
     // Returns empty optional or the new record position 0 to 4 (1st to 5th).
-    static bn::optional<ubyte> is_record_sprint(ubyte level, int time_in_frames)
+    static bn::optional<int> is_record_sprint(int level, int time_in_frames)
     {
-        for (ubyte i = 0; i < MAX_RECORDS; ++i)
+        for (int i = 0; i < MAX_RECORDS; ++i)
         {
             if (time_in_frames < save_data.records_sprint[level][i].time_in_frames)
             {
@@ -87,13 +87,13 @@ private:
             }
         }
 
-        return bn::optional<ubyte>();
+        return bn::optional<int>();
     }
 
     // Returns empty optional or the new record position 0 to 4 (1st to 5th).
-    static bn::optional<ubyte> is_record_timeattack(ubyte level, int score)
+    static bn::optional<int> is_record_timeattack(int level, int score)
     {
-        for (ubyte i = 0; i < MAX_RECORDS; ++i)
+        for (int i = 0; i < MAX_RECORDS; ++i)
         {
             if (score > save_data.records_timeattack[level][i].score)
             {
@@ -101,12 +101,12 @@ private:
             }
         }
 
-        return bn::optional<ubyte>();
+        return bn::optional<int>();
     }
 
-    static void insert_record_sprint(ubyte level, record_sprint record)
+    static void insert_record_sprint(int level, record_sprint record)
     {
-       for (ubyte i = 0; i < MAX_RECORDS; ++i)
+       for (int i = 0; i < MAX_RECORDS; ++i)
        {
             if (record.time_in_frames < save_data.records_sprint[level][i].time_in_frames)
             {
@@ -126,9 +126,9 @@ private:
         BN_ASSERT(false, "Tried to save a timeattack record that was not better than any existing records");
     }
 
-    static void insert_record_timeattack(ubyte level, record_timeattack record)
+    static void insert_record_timeattack(int level, record_timeattack record)
     {
-       for (ubyte i = 0; i < MAX_RECORDS; ++i)
+       for (int i = 0; i < MAX_RECORDS; ++i)
        {
             if (record.score > save_data.records_timeattack[level][i].score)
             {
@@ -249,7 +249,7 @@ public:
     }
 
     // Return record position (0 - 4  (1st to 5th)) for the relevant `game_mode` (sprint / timeattack).
-    static bn::optional<ubyte> is_record(game_mode mode, ubyte level, int frametime_or_score)
+    static bn::optional<int> is_record(game_mode mode, int level, int frametime_or_score)
     {
         if (mode == game_mode::sprint)
         {
@@ -261,13 +261,13 @@ public:
         }
         else
         {
-            BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode);
-            return bn::optional<ubyte>();
+            BN_ASSERT(false, "Unknown game mode: ", (int)mode);
+            return bn::optional<int>();
         }
     }
 
     // Save sprint / timeattack record depending on `mode`.
-    static void save_record(game_mode mode, ubyte level, RECORD_NAME name, int frametime_or_score)
+    static void save_record(game_mode mode, int level, RECORD_NAME name, int frametime_or_score)
     {
         if (mode == game_mode::sprint)
         {
@@ -279,7 +279,7 @@ public:
         }
         else
         {
-            BN_ASSERT(false, "Unknown game mode: ", (ubyte)mode);
+            BN_ASSERT(false, "Unknown game mode: ", (int)mode);
         }
 
         save_data.last_name = name;

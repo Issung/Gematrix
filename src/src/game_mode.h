@@ -2,7 +2,7 @@
 
 #include "util.h"
 
-enum class game_mode : ubyte
+enum class game_mode : int
 {
     sprint,
     timeattack,

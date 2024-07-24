@@ -32,7 +32,7 @@ private:
     // Range 0 - 25 = A - Z, and 26 = _.
     int char_to_allowed_char_index(char c)
     {
-        ubyte ret = 
+        int ret = 
             (c == '_') ? NAME_ALLOWED_CHARS_COUNT - 1 :
             (c > 'A' && c < 'Z') ? c - 'A' :
             256;

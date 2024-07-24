@@ -35,7 +35,6 @@ enum class drawer_state
     DroppingGems,   // Animating gems dropping.
 };
 
-// TODO: Change all of these to int8_t.
 class anim_slide {
 private:
     int from_row;
@@ -201,7 +200,7 @@ public:
                 auto y = (30 * r) - 60;
                 positions[r][c] = bn::fixed_point(x, y);
                 auto gem_sprite = bn::sprite_items::gem.create_sprite(x, y);
-                auto palette_index = (uint8_t)b.gems[r][c];
+                auto palette_index = (int)b.gems[r][c];
                 auto palette = colors[palette_index];
                 gem_sprite.set_palette(palette);
                 gem_sprites.push_back(gem_sprite);
@@ -313,7 +312,7 @@ public:
         for (auto& drop : drops)
         {
             auto spr = gem_sprites[(drop.to_row * board::cols) + drop.col];
-            auto palette = colors[(uint8_t)drop.type];
+            auto palette = colors[(int)drop.type];
             slides.push_back(anim_slide(drop.from_row, drop.col, drop.to_row, drop.col, spr, palette, drop.type != gem_type::Empty));
         }
     }
@@ -355,7 +354,7 @@ public:
             for (int col = board::cols - 1; col >= 0; --col)
             {
                 auto spr = gem_sprites[(row * board::cols) + col];
-                auto palette = colors[(uint8_t)b.gems[row][col]];
+                auto palette = colors[(int)b.gems[row][col]];
                 auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
                 slide.frames_delay = delay;
                 slides.push_back(slide);
@@ -376,7 +375,7 @@ public:
                 even ? --col : ++col)
             {
                 auto spr = gem_sprites[(row * board::cols) + col];
-                auto palette = colors[(uint8_t)b.gems[row][col]];
+                auto palette = colors[(int)b.gems[row][col]];
                 auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
                 slide.frames_delay = delay;
                 slides.push_back(slide);
@@ -401,7 +400,7 @@ public:
                 if (filled[row][col] == false)
                 {
                     auto spr = gem_sprites[(row * board::cols) + col];
-                    auto palette = colors[(uint8_t)b.gems[row][col]];
+                    auto palette = colors[(int)b.gems[row][col]];
                     auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
                     slide.frames_delay = filled_count * delay_between_each_gem_drop;
                     slides.push_back(slide);
@@ -431,7 +430,7 @@ public:
                 if (filled[col] == false)
                 {
                     auto spr = gem_sprites[(row * board::cols) + col];
-                    auto palette = colors[(uint8_t)b.gems[row][col]];
+                    auto palette = colors[(int)b.gems[row][col]];
                     auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
                     slide.frames_delay = delay;
                     slides.push_back(slide);
@@ -479,7 +478,7 @@ private:
                 }
                 else
                 {
-                    auto palette = colors[(uint8_t)gem_value];
+                    auto palette = colors[(int)gem_value];
                     gem_sprite.set_palette(palette);
                     gem_sprite.set_visible(true);
                 }

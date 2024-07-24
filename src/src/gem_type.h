@@ -3,7 +3,7 @@
 
 #include "bn_core.h"
 
-enum class gem_type : uint8_t
+enum class gem_type : int
 {
     Red,
     Green,

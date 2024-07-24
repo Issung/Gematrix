@@ -9,7 +9,7 @@
 constexpr static int LONGEST_TITLE_TEXT = 20;   // RECORDS (TIMEATTACK)
 constexpr static int LONGEST_OPTION_TEXT = 11;
 constexpr static int MAX_OPTIONS_PER_SCREEN = 5;
-constexpr static sbyte OPTIONS_Y_GAP = 20;    // Y position gap between menu options
+constexpr static int OPTIONS_Y_GAP = 20;    // Y position gap between menu options
 
 // A menu contains a title, options and optionally a reference to a previous menu.
 class menu
@@ -25,11 +25,11 @@ public:
 
     // Optionally set the amount of options in `options` vector, rather than using the vector size.
     // So that other options sprites (beyond the count) can be used for other things (like score display).
-    bn::optional<ubyte> options_count;
+    bn::optional<int> options_count;
 
     // Where to position menu options, position them in the middle if unset.
     // Used so other things can be displayed in other positions (like scores).
-    bn::optional<sbyte> options_y_position;
+    bn::optional<int> options_y_position;
 
     menu(
         bn::string_view _title,
@@ -41,14 +41,14 @@ public:
     }
 
     // Get the amount of options to draw.
-    ubyte get_options_count()
+    int get_options_count()
     {
-        auto count = options_count.has_value() ? options_count.value() : (ubyte)options.size();
+        auto count = options_count.has_value() ? options_count.value() : options.size();
         return count;
     }
 
     // Get the y position the first menu option should be drawn at (going downwards from there).
-    sbyte get_y_position()
+    int get_y_position()
     {
         if (options_y_position.has_value())
         {

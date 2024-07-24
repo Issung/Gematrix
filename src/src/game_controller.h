@@ -45,6 +45,8 @@
 #include "game_mode.h"
 #include "levels.h"
 #include "music_util.h"
+#include "bn_affine_bg_items_board.h"
+#include "bn_affine_bg_ptr.h"
 
 #define HEADER_X +70    // x position for headers, with left-align generation.
 #define VALUE_X +116    // x position for values, with right-align generation.
@@ -56,6 +58,7 @@ class game_controller
 private:
     board b;
     board_drawer bd = board_drawer(b);
+    bn::affine_bg_ptr board_bg = bn::affine_bg_items::board.create_bg(11, 51);
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
     bn::vector<bn::sprite_ptr, 5> score_header_text;  // Text sprites that just say "SCORE".
     bn::vector<bn::sprite_ptr, 5> combo_header_text;    // Text sprites that say "COMBO".
@@ -112,6 +115,7 @@ private:
     }
 
 public: 
+    // Constructor.
     game_controller()
     {
         text_generator.set_left_alignment();
@@ -122,6 +126,8 @@ public:
         text_generator.set_right_alignment();
 
         text_generator_small.set_center_alignment();
+
+        board_bg.set_wrapping_enabled(false);
     }
 
     game_mode get_mode() { return mode; }
@@ -154,6 +160,7 @@ public:
         for (auto& ft : floating_texts) { ft.set_visible(false); }
         if (countdown_number_sprite.has_value()) { countdown_number_sprite.value().set_visible(false); }
         
+        board_bg.set_visible(false);
         score_number_sprites.clear();
         combo_text_sprites.clear();
         spr_selector.set_visible(false);
@@ -169,6 +176,7 @@ public:
         for (auto& s : goal_or_limit_text) { s.set_visible(true); }
         for (auto& ft : floating_texts) { ft.set_visible(true); }
 
+        board_bg.set_visible(true);
         spr_selector.set_visible(true);
         bd.show();
     }

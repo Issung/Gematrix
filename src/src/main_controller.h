@@ -32,7 +32,7 @@ private:
     int selected_index = 0;
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
     bn::sprite_palette_ptr palette_highlight = gj::fixed_32x64_sprite_font.item().palette_item().create_palette();
-    bn::sprite_palette_ptr palette_grey = create_palette(16, 16, 16);
+    bn::sprite_palette_ptr palette_grey = create_text_palette(bn::color(5, 5, 5), bn::color(0, 0, 0));
     bn::vector<bn::sprite_ptr, LONGEST_TITLE_TEXT> menu_title_sprites;
     bn::fixed title_sin_angle;
     bn::fixed title_sin_angle_inc = 5;
@@ -69,6 +69,11 @@ private:
         for (int i = 0; i < size; ++i)
         {
             text_generator.generate(0, y_pos + (i * 20), current_menu->options[i].text, menu_options_sprites[i]);
+
+            // Annoyingly set the palette of each sprite here so they don't all flicker as white for one frame.
+            if (current_menu != &records_display_menu)  // Except when on records_display_menu so all records display in normal highlighted palette.
+                for (auto s : menu_options_sprites[i])
+                    s.set_palette(i == selected_index ? palette_highlight : palette_grey);
         }
     }
 
@@ -425,6 +430,7 @@ public:
         bn::core::update();
     }
 
+    // Constructor.
     main_controller()
     {
         gc.hide();

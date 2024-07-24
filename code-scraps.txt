@@ -1,5 +1,24 @@
 _Scrap pieces of code_
 
+BN_LOG("Highlight palette: ",
+    palette_highlight.colors()[0].red(), ", ", 
+    palette_highlight.colors()[1].red(), ", ", 
+    palette_highlight.colors()[2].red(), ", ",
+    palette_highlight.colors()[3].red(), ", ",
+    palette_highlight.colors()[4].red(), ", ",
+    palette_highlight.colors()[5].red(), ", ",
+    palette_highlight.colors()[6].red(), ", ",
+    palette_highlight.colors()[7].red(), ", ",
+    palette_highlight.colors()[8].red(), ", ",
+    palette_highlight.colors()[9].red(), ", ",
+    palette_highlight.colors()[10].red(), ", ",
+    palette_highlight.colors()[11].red(), ", ",
+    palette_highlight.colors()[12].red(), ", ",
+    palette_highlight.colors()[13].red(), ", ",
+    palette_highlight.colors()[14].red(), ", ",
+    palette_highlight.colors()[15].red(), ", "
+);
+
 void redraw_all_gems()
 {
     for (int r = 0; r < board::rows; ++r)

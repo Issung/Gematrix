@@ -13,6 +13,7 @@
 #include "bn_music.h"
 #include "sound_util.h"
 #include "music_util.h"
+#include "background_controller.h"
 
 #define TITLE_Y -55
 
@@ -431,7 +432,7 @@ public:
     }
 
     // Constructor.
-    main_controller()
+    main_controller(background_controller& bgc) : gc(bgc)
     {
         gc.hide();
         hec.hide();

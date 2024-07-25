@@ -47,6 +47,7 @@
 #include "music_util.h"
 #include "bn_affine_bg_items_board.h"
 #include "bn_affine_bg_ptr.h"
+#include "background_controller.h"
 
 #define HEADER_X +70    // x position for headers, with left-align generation.
 #define VALUE_X +116    // x position for values, with right-align generation.
@@ -58,6 +59,7 @@ class game_controller
 private:
     board b;
     board_drawer bd = board_drawer(b);
+    background_controller& background;
     bn::affine_bg_ptr board_bg = bn::affine_bg_items::board.create_bg(11, 51);
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
     bn::vector<bn::sprite_ptr, 5> score_header_text;  // Text sprites that just say "SCORE".
@@ -116,7 +118,7 @@ private:
 
 public: 
     // Constructor.
-    game_controller()
+    game_controller(background_controller& _background) : background(_background)
     {
         text_generator.set_left_alignment();
         text_generator.generate(HEADER_X, -71, "SCORE", score_header_text);   // TODO: Fix Y position to align with gems border when added.
@@ -198,6 +200,8 @@ public:
         bd.reset();
         bd.animate_random_drop_all_in();
         floating_texts.clear();
+
+        background.randomize_direction();
     }
 
     void newgame(game_mode _mode, int _level)
@@ -357,6 +361,8 @@ public:
                         auto ft = floating_text(positions[p.row][p.col], palette, points_per_gem);
                         floating_texts.push_back(ft);
                     }
+
+                    background.bump_speed();
                 }
 
                 if (!matches.empty())

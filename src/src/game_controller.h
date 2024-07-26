@@ -18,6 +18,7 @@
 #include "bn_sprite_actions.h"
 #include "bn_sprite_items_gem.h"
 #include "bn_sprite_items_selector.h"
+#include "bn_sprite_items_selector_dir.h"
 #include "bn_sprite_items_one.h"
 #include "bn_sprite_items_two.h"
 #include "bn_sprite_items_three.h"
@@ -66,6 +67,7 @@ private:
     bn::vector<bn::sprite_ptr, 5> timer_sprites;
     bn::vector<bn::sprite_ptr, 5> goal_or_limit_text;   // Text sprites for the goal/limit value.
     bn::sprite_ptr spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
+    bn::sprite_ptr spr_selector_dirs = bn::sprite_items::selector_dir.create_sprite(0, 0);  // Selector sprite with direction arrows.
     bn::sprite_palette_ptr active_palette = spr_selector.palette();
     bn::sprite_palette_ptr inactive_palette = create_palette(16, 16, 16);
     bn::optional<bn::sprite_ptr> countdown_number_sprite;
@@ -122,6 +124,8 @@ public:
         text_generator.set_right_alignment();
 
         text_generator_small.set_center_alignment();
+
+        spr_selector_dirs.set_visible(false);
     }
 
     game_mode get_mode() { return mode; }
@@ -157,6 +161,7 @@ public:
         score_number_sprites.clear();
         combo_text_sprites.clear();
         spr_selector.set_visible(false);
+        spr_selector_dirs.set_visible(false);
         bd.hide();
     }
 
@@ -170,6 +175,7 @@ public:
         for (auto& ft : floating_texts) { ft.set_visible(true); }
 
         spr_selector.set_visible(true);
+        spr_selector_dirs.set_visible(false);
         bd.show();
     }
 
@@ -315,9 +321,13 @@ public:
             }
         }
 
+        auto& spr_current_selector = bn::keypad::a_held() ? spr_selector_dirs : spr_selector;
+        auto& spr_other_selector = bn::keypad::a_held() ? spr_selector : spr_selector_dirs;
         auto selector_point = positions[sel_row][sel_col];
-        spr_selector.set_position(selector_point);
-        spr_selector.set_palette(animating ? inactive_palette : active_palette);
+        spr_current_selector.set_position(selector_point);
+        spr_current_selector.set_palette(animating ? inactive_palette : active_palette);
+        spr_current_selector.set_visible(true);
+        spr_other_selector.set_visible(false);
 
         auto board_animations_complete = bd.update();
         if (board_animations_complete)

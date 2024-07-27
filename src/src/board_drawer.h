@@ -224,7 +224,7 @@ public:
         //BN_LOG("Finished constructing board_drawer.");
     }
 
-    void gameover()
+    void greyout()
     {
         for (int r = 0; r < board::rows; ++r)
         {

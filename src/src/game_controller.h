@@ -62,6 +62,13 @@ enum class game_state
     gameover,   // Small period of animation before the gameover/hiscore screen appears.
 };
 
+enum class gameover_state
+{
+    waiting_for_board_to_stop,  // Input disbled, wait for the board drawer animation to stop, then greyout the board.
+    waiting_for_score_counter_to_stop,  // Wait for displayed_score to reach the actual score, then greyout all text.
+    waiting_for_menu_to_appear, // Short period after the score counter stops, 1 second wait, before showing the gameover/hiscore menu.
+};
+
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class game_controller
 {
@@ -97,6 +104,11 @@ private:
     int start_countdown_timer_frames = 0;    // How many frames remain until the game starts.
     bool board_animating = false;   // Is the board currently animating.
 
+    // Gameover animation state
+    gameover_state go_state;    // Current stage of the animation.
+    int frames_waiting_for_score_to_finish_counting = 0;    // How many frames spent waiting for score to finish counting.
+    int frames_waiting_for_gameover_menu_to_appear = 0; // How many frames spent waiting for menu to appear after score finished counting.
+
     // Sound items for matches, increasing in pitch, use higher numbers for combos.
     bn::sound_item match_sounds[MATCH_SOUNDS_LEN] = {
         bn::sound_items::match1,
@@ -131,11 +143,17 @@ private:
         }
     }
 
-    // Put the game into a gameover state where everything is frozen and can no longer be updated.
-    void gameover()
+    // Grey out all the ui elements.
+    void greyout_board()
     {
-        state == game_state::gameover;
+        spr_selector.set_palette(gameover_grey);
+        spr_selector_dirs.set_palette(gameover_grey);
+        background.brake();
+        bd.greyout();
+    }
 
+    void greyout_text()
+    {
         for (auto& s : score_header_text) { s.set_palette(gameover_grey_text); }
         for (auto& s : combo_header_text) { s.set_palette(gameover_grey_text); }
         for (auto& s : time_header_text) { s.set_palette(gameover_grey_text); }
@@ -145,11 +163,6 @@ private:
         for (auto& s : score_number_sprites) { s.set_palette(gameover_grey_text); }
         for (auto& s : combo_text_sprites) { s.set_palette(gameover_grey_text); }
         for (auto& ft : floating_texts) { ft.set_palette(gameover_grey_text); }
-        spr_selector.set_palette(gameover_grey);
-        spr_selector_dirs.set_palette(gameover_grey);
-        
-        background.freeze();
-        bd.gameover();
     }
 
     void draw_score()
@@ -158,6 +171,100 @@ private:
 
         score_number_sprites.clear();
         text_generator.generate(VALUE_X, -62 - jiggle, bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
+    }
+
+    // Heart and soul of the game. Updates the board frame by frame to perform animations, once the animations complete
+    // depending on which animations they were, the next piece of logic takes place. Fragile code, be careful.
+    void update_board()
+    {
+        auto board_animations_complete = bd.update();
+        if (board_animations_complete)
+        {
+            // When the drawer says the animations are complete, the state variable is whatever it
+            // was last animation, by knowing what it was was last animation we can tell what animations just completed.
+            // Then we can decide what to do next.
+            auto bdstate = bd.state();
+
+            // When a slide or gem drops complete, delete matches again.
+            if (bdstate == drawer_state::PlayingSlide || bdstate == drawer_state::DroppingGems)
+            {
+                auto matches = b.delete_matches();
+
+                for (auto& m : matches)
+                {
+                    // TODO: Score adjustments:
+                    // - Should each gem be worth worth its match size? E.g. A 4-of-a-kind each gem gives 4 points?
+                    // - Should each match increase the combo rather than each play_matches?
+                    auto points_per_gem = m.positions.size() * combo;
+                    auto points_for_match = points_per_gem * m.positions.size();
+                    score += points_for_match;
+                    
+                    // TODO: Small innacuracy in displayed floating scores when 1 gem is used in 2 matches, the user
+                    // only sees the top-most point for a single match.
+                    for (auto& p : m.positions)
+                    {
+                        auto palette = bd.colors[(int)m.type];
+                        auto ft = floating_text(positions[p.row][p.col], palette, points_per_gem);
+                        floating_texts.push_back(ft);
+                    }
+
+                    background.accelerate();
+                }
+
+                if (!matches.empty())
+                {
+                    auto& sound = match_sounds[bn::min(combo - 1, MATCH_SOUNDS_LEN - 1)];
+                    sound.play();
+                }
+
+                bd.play_matches(matches);
+                combo += 1;
+            }
+            // After matches are destroyed, drop gems.
+            else if (bdstate == drawer_state::DestroyingMatches)
+            {
+                auto drops = b.drop_gems();
+                bd.play_drops(drops);
+            }
+            else // State switches to `Waiting` when play_matches() is called with an empty list.
+            {
+                board_animating = false;
+                combo = 1;
+            }
+        }
+        else
+        {
+            board_animating = true;
+        }
+    }
+
+    void update_displayed_score()
+    {
+        if (displayed_score < score)
+        {
+            if (displayed_score % 2 == 0)
+            {
+                bn::sound_items::point.play();
+            }
+            
+            ++displayed_score;
+        }
+
+        // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
+        // 6 characters can fit before overflowing onto the game board.
+        draw_score();
+    }
+
+    // Start the gameover animation process.
+    // Checked for at the start of each `update()`.
+    void start_gameover()
+    {
+        spr_selector.set_visible(false);
+        spr_selector_dirs.set_visible(false);
+        state = game_state::gameover;
+        go_state = gameover_state::waiting_for_board_to_stop;
+        frames_waiting_for_score_to_finish_counting = 0;
+        frames_waiting_for_gameover_menu_to_appear = 0;
     }
 public: 
     // Constructor.
@@ -272,6 +379,45 @@ public:
     // Returns true if game is complete, based on different conditions depending on game mode.
     bool update()
     {
+        if (state == game_state::gameover)
+        {
+            if (go_state == gameover_state::waiting_for_board_to_stop)
+            {
+                update_board();
+                update_displayed_score();
+
+                if (!board_animating)
+                {
+                    greyout_board();
+                    go_state = gameover_state::waiting_for_score_counter_to_stop;
+                }
+            }
+            else if (go_state == gameover_state::waiting_for_score_counter_to_stop)
+            {
+                update_displayed_score();
+
+                if (frames_waiting_for_score_to_finish_counting++ >= 60 && displayed_score == score)
+                {
+                    greyout_text();
+                    go_state = gameover_state::waiting_for_menu_to_appear;
+                }
+            }
+            else if (go_state == gameover_state::waiting_for_menu_to_appear)
+            {
+                if (frames_waiting_for_gameover_menu_to_appear++ >= 60)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                BN_ASSERT(false, "Unknown go_state: ", (int)go_state);
+            }
+
+            animate_floating_texts();
+            return false;
+        }
+
         if (state == game_state::countdown)
         {
             if (start_countdown_timer_frames > 0)
@@ -388,85 +534,14 @@ public:
         spr_current_selector.set_visible(true);
         spr_other_selector.set_visible(false);
 
-        auto board_animations_complete = bd.update();
-        if (board_animations_complete)
-        {
-            // When the drawer says the animations are complete, the state variable is whatever it
-            // was last animation, by knowing what it was was last animation we can tell what animations just completed.
-            // Then we can decide what to do next.
-            auto bdstate = bd.state();
+        update_board();
 
-            // When a slide or gem drops complete, delete matches again.
-            if (bdstate == drawer_state::PlayingSlide || bdstate == drawer_state::DroppingGems)
-            {
-                auto matches = b.delete_matches();
-
-                for (auto& m : matches)
-                {
-                    // TODO: Score adjustments:
-                    // - Should each gem be worth worth its match size? E.g. A 4-of-a-kind each gem gives 4 points?
-                    // - Should each match increase the combo rather than each play_matches?
-                    auto points_per_gem = m.positions.size() * combo;
-                    auto points_for_match = points_per_gem * m.positions.size();
-                    score += points_for_match;
-                    
-                    // TODO: Small innacuracy in displayed floating scores when 1 gem is used in 2 matches, the user
-                    // only sees the top-most point for a single match.
-                    for (auto& p : m.positions)
-                    {
-                        auto palette = bd.colors[(int)m.type];
-                        auto ft = floating_text(positions[p.row][p.col], palette, points_per_gem);
-                        floating_texts.push_back(ft);
-                    }
-
-                    background.bump_speed();
-                }
-
-                if (!matches.empty())
-                {
-                    auto& sound = match_sounds[bn::min(combo - 1, MATCH_SOUNDS_LEN - 1)];
-                    sound.play();
-                }
-
-                bd.play_matches(matches);
-                combo += 1;
-            }
-            // After matches are destroyed, drop gems.
-            else if (bdstate == drawer_state::DestroyingMatches)
-            {
-                auto drops = b.drop_gems();
-                bd.play_drops(drops);
-            }
-            else // State switches to `Waiting` wen play_matches() is called with an empty list.
-            {
-                board_animating = false;
-                combo = 1;
-            }
-        }
-        else
-        {
-            board_animating = true;
-        }
-
-        if (displayed_score < score)
-        {
-            if (displayed_score % 2 == 0)
-            {
-                bn::sound_items::point.play();
-            }
-            
-            ++displayed_score;
-        }
-
-        // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
-        // 6 characters can fit before overflowing onto the game board.
-        draw_score();
+        update_displayed_score();
 
         combo_text_sprites.clear();
         text_generator.generate(VALUE_X, -41, bn::format<4>("x{}", combo), combo_text_sprites);
         
         auto time_str = util::frames_to_time_string(timer_frames);
-
         timer_sprites.clear();
         text_generator.generate(VALUE_X, +49, time_str, timer_sprites);
 
@@ -482,12 +557,7 @@ public:
         auto timeattack_gameover = mode == game_mode::timeattack && timer_frames > time_limit_frames;
         if (sprint_gameover || timeattack_gameover)
         {
-            // Overwrite the displayed score to the actual score so the freeze frame in the background it is correct.
-            displayed_score = score;
-            draw_score();
-
-            gameover();
-            return true;
+            start_gameover();
         }
 
         return false;

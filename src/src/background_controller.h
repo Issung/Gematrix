@@ -20,11 +20,19 @@ private:
     bn::fixed x_offset = 0.1;
     bn::fixed y_offset = 0.05;
     bn::fixed speed = 1.0;
+    bool frozen = false;
 
 public:
-    // Randomize the x/y background panning values.
-    void randomize_direction()
+    void freeze()
     {
+        frozen = true;
+    }
+
+    // Reset speed, randomize a new direction, and unfreeze animation.
+    void reset()
+    {
+        frozen = false;
+        speed = SPEED_MIN;
         x_offset = rand.get_fixed(-OFFSET_MAX, OFFSET_MAX);
         y_offset = rand.get_fixed(-OFFSET_MAX, OFFSET_MAX);
     }
@@ -42,6 +50,11 @@ public:
 
     void update()
     {
+        if (frozen)
+        {
+            return;
+        }
+
         if (speed > SPEED_MIN)
         {
             speed -= SPEED_DECREASE;

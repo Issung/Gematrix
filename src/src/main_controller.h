@@ -29,6 +29,7 @@ class main_controller
 private:
     game_controller gc;
     highscore_entry_controller hec;
+    background_controller& background;
     game_state state = game_state::menus;
     int selected_index = 0;
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
@@ -111,7 +112,7 @@ private:
         else if (sound == menu_sound::back) { bn::sound_items::menu_back.play(); }
     }
 
-    void change_state(game_state new_state)
+    void change_state(game_state new_state, bool hide_game = true)
     {
         state = new_state;
 
@@ -119,13 +120,11 @@ private:
         {
             change_menu(&main_menu, menu_sound::none);
             hec.hide();
-            gc.hide();
         }
         else if (state == game_state::paused)
         {
             music_util::maybe_pause();
             bn::sound_items::pause.play();
-            gc.hide();
             change_menu(&pause_menu, menu_sound::none);
         }
         else if (state == game_state::ingame)
@@ -137,7 +136,6 @@ private:
         else if (state == game_state::hiscore)
         {
             change_menu(nullptr, menu_sound::none);
-            gc.hide();
 
             auto record_position = memory::is_record(gc.get_mode(), gc.get_level(), gc.get_gamemode_metric());
             text_generator.generate(0, -50, "GAMEOVER", menu_title_sprites);
@@ -151,6 +149,11 @@ private:
                 BN_LOG("SCORE STR: ", score_str);
                 text_generator.generate(0, -15, score_str, menu_options_sprites[1]);
             }
+        }
+
+        if (state != game_state::ingame && hide_game)
+        {
+            gc.hide();
         }
     }
 
@@ -360,6 +363,7 @@ private:
             }
             else if (key == menu_option_key::quit)
             {
+                background.reset();
                 change_state(game_state::menus);
                 music_util::maybe_stop();
             }
@@ -385,11 +389,11 @@ public:
 
                     if (is_record)
                     {
-                        change_state(game_state::hiscore);
+                        change_state(game_state::hiscore, /*hide_game: */ false);
                     }
                     else
                     {
-                        change_state(game_state::menus);
+                        change_state(game_state::menus, /*hide_game: */ false);
                         change_menu(&gameover_menu, menu_sound::none);
 
                         while (gameover_menu.options.size() > 2)
@@ -420,6 +424,7 @@ public:
                 auto metric = gc.get_gamemode_metric();
 
                 memory::save_record(mode, level, name, metric);
+                background.reset();
                 change_state(game_state::menus);
             }
         }
@@ -432,7 +437,7 @@ public:
     }
 
     // Constructor.
-    main_controller(background_controller& bgc) : gc(bgc)
+    main_controller(background_controller& bgc) : gc(bgc), background(bgc)
     {
         gc.hide();
         hec.hide();

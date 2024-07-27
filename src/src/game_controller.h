@@ -73,8 +73,12 @@ private:
     bn::vector<bn::sprite_ptr, 5> goal_or_limit_text;   // Text sprites for the goal/limit value.
     bn::sprite_ptr spr_selector = bn::sprite_items::selector.create_sprite(0, 0);
     bn::sprite_ptr spr_selector_dirs = bn::sprite_items::selector_dir.create_sprite(0, 0);  // Selector sprite with direction arrows.
-    bn::sprite_palette_ptr active_palette = spr_selector.palette();
-    bn::sprite_palette_ptr inactive_palette = create_palette(16, 16, 16);
+    bn::sprite_palette_ptr text_palette = gj::fixed_32x64_sprite_font.item().palette_item().create_palette();
+    bn::sprite_palette_ptr selector_active_palette = spr_selector.palette();
+    bn::sprite_palette_ptr selector_inactive_palette = create_palette(16, 16, 16);
+    bn::sprite_palette_ptr gameover_grey = create_palette(3, 3, 3);
+    bn::sprite_palette_ptr gameover_selector = create_palette(5, 5, 5);
+    bn::sprite_palette_ptr gameover_grey_text = create_text_palette(bn::color(4, 4, 4), bn::color(1, 1, 1));
     bn::optional<bn::sprite_ptr> countdown_number_sprite;
     bn::vector<floating_text, 64> floating_texts;
     int sel_row = 0;    // Current row of the selector.
@@ -116,6 +120,25 @@ private:
                 ++it;
             }
         }
+    }
+
+    // Put the game into a gameover state where everything is frozen and can no longer be updated.
+    void gameover()
+    {
+        for (auto& s : score_header_text) { s.set_palette(gameover_grey_text); }
+        for (auto& s : combo_header_text) { s.set_palette(gameover_grey_text); }
+        for (auto& s : time_header_text) { s.set_palette(gameover_grey_text); }
+        for (auto& s : goal_or_limit_header_text) { s.set_palette(gameover_grey_text); }
+        for (auto& s : goal_or_limit_text) { s.set_palette(gameover_grey_text); }
+        for (auto& s : timer_sprites) { s.set_palette(gameover_grey_text); }
+        for (auto& s : score_number_sprites) { s.set_palette(gameover_grey_text); }
+        for (auto& s : combo_text_sprites) { s.set_palette(gameover_grey_text); }
+        for (auto& ft : floating_texts) { ft.set_palette(gameover_grey_text); }
+        spr_selector.set_palette(gameover_grey);
+        spr_selector_dirs.set_palette(gameover_grey);
+        
+        background.freeze();
+        bd.gameover();
     }
 
 public: 
@@ -175,12 +198,12 @@ public:
 
     void show()
     {
-        for (auto& s : score_header_text) { s.set_visible(true); }
-        for (auto& s : combo_header_text) { s.set_visible(true); }
-        for (auto& s : time_header_text) { s.set_visible(true); }
-        for (auto& s : goal_or_limit_header_text) { s.set_visible(true); }
-        for (auto& s : goal_or_limit_text) { s.set_visible(true); }
-        for (auto& ft : floating_texts) { ft.set_visible(true); }
+        for (auto& s : score_header_text) { s.set_visible(true); s.set_palette(text_palette); }
+        for (auto& s : combo_header_text) { s.set_visible(true); s.set_palette(text_palette); }
+        for (auto& s : time_header_text) { s.set_visible(true); s.set_palette(text_palette); }
+        for (auto& s : goal_or_limit_header_text) { s.set_visible(true); s.set_palette(text_palette); }
+        for (auto& s : goal_or_limit_text) { s.set_visible(true); s.set_palette(text_palette); }
+        for (auto& ft : floating_texts) { ft.set_visible(true); ft.set_palette(text_palette); }
 
         board_bg.set_visible(true);
         spr_selector.set_visible(true);
@@ -206,7 +229,7 @@ public:
         bd.animate_random_drop_all_in();
         floating_texts.clear();
 
-        background.randomize_direction();
+        background.reset();
     }
 
     void newgame(game_mode _mode, int _level)
@@ -336,7 +359,7 @@ public:
         auto& spr_other_selector = bn::keypad::a_held() ? spr_selector : spr_selector_dirs;
         auto selector_point = positions[sel_row][sel_col];
         spr_current_selector.set_position(selector_point);
-        spr_current_selector.set_palette(animating ? inactive_palette : active_palette);
+        spr_current_selector.set_palette(animating ? selector_inactive_palette : selector_active_palette);
         spr_current_selector.set_visible(true);
         spr_other_selector.set_visible(false);
 
@@ -437,11 +460,12 @@ public:
         animate_texts();
 
         // Check for game-end conditions.
-        if (
-            (mode == game_mode::sprint && score >= score_goal)
-            || (mode == game_mode::timeattack && timer_frames > time_limit_frames)
-        )
+        auto sprint_gameover = mode == game_mode::sprint && score >= score_goal;
+        auto timeattack_gameover = mode == game_mode::timeattack && timer_frames > time_limit_frames;
+        if (sprint_gameover || timeattack_gameover)
         {
+            // TODO: Overwrite the displayed score to the actual score so the freeze frame in the background it is correct.
+            gameover();
             return true;
         }
 

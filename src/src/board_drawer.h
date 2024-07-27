@@ -192,6 +192,7 @@ class board_drawer
 {
 private: 
     board& b;
+    bn::sprite_palette_ptr gameover_grey = create_palette(2, 2, 2);
     bn::vector<bn::sprite_ptr, board::total_gems> gem_sprites;  // Each gem sprite, can be accessed with `(row * board::cols) + col`.
     bn::list<anim_slide, board::total_gems> slides;
     bn::list<anim_destroy, board::total_gems> destroys;
@@ -232,6 +233,17 @@ public:
         }
 
         //BN_LOG("Finished constructing board_drawer.");
+    }
+
+    void gameover()
+    {
+        for (int r = 0; r < board::rows; ++r)
+        {
+            for (int c = 0; c < board::cols; ++c)
+            {
+                gem_sprites[r * board::cols + c].set_palette(gameover_grey);
+            }
+        }
     }
 
     void hide()

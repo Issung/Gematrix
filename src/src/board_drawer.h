@@ -16,17 +16,6 @@
 // TODO: Do we have to define this here? T-T It's being used in anim_slide.
 static bn::fixed_point positions[board::rows][board::cols]; // The point of each drawn sprite, saved for use by the selector. [row][col]
 
-/*enum anim_type 
-{
-    slide
-};
-
-class anim
-{
-public:
-    anim_type type;
-};*/
-
 enum class drawer_state
 {
     Waiting,    // Waiting for player input.
@@ -153,7 +142,7 @@ namespace
     {
         auto color = bn::color(r, g, b);
         bn::color colors[16];
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < 16; ++i)
         {
             colors[i] = color;
         }
@@ -171,7 +160,7 @@ namespace
         // Red channel value: 0, 6, 13, 22, 28, 12, 9, 30, 12, 12, 31, 16, 0, 23, 31, 1
 
         bn::color colors[16];
-        for (int i = 1; i < 16; i++)
+        for (int i = 1; i < 16; ++i)
         {
             // Set all other colors to red so we can see clearly if something went wrong.
             colors[i] = bn::color(31, 0, 0);
@@ -213,9 +202,9 @@ public:
 
     board_drawer(board& _b) : b(_b)
     {
-        for (int r = 0; r < board::rows; r++)
+        for (int r = 0; r < board::rows; ++r)
         {
-            for (int c = 0; c < board::cols; c++)
+            for (int c = 0; c < board::cols; ++c)
             {
                 //BN_LOG("Making gem r: ", r, " c: ", c);
 
@@ -248,9 +237,9 @@ public:
 
     void hide()
     {
-        for (int r = 0; r < board::rows; r++)
+        for (int r = 0; r < board::rows; ++r)
         {
-            for (int c = 0; c < board::cols; c++)
+            for (int c = 0; c < board::cols; ++c)
             {
                 gem_sprites[r * board::cols + c].set_visible(false);
             }
@@ -259,9 +248,9 @@ public:
 
     void show()
     {
-        for (int r = 0; r < board::rows; r++)
+        for (int r = 0; r < board::rows; ++r)
         {
-            for (int c = 0; c < board::cols; c++)
+            for (int c = 0; c < board::cols; ++c)
             {
                 gem_sprites[r * board::cols + c].set_visible(true);
             }

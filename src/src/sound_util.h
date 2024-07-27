@@ -9,6 +9,7 @@ class sound_util
 public:
     static void set_sound_enabled(bool enable_sound)
     {
-        bn::sound::set_master_volume(enable_sound ? 1 : 0);
+        bn::fixed volume = enable_sound == true ? 1 : 0;
+        bn::sound::set_master_volume(volume);
     }
 };

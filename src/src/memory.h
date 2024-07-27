@@ -153,8 +153,6 @@ public:
     {
         bn::sram::read(save_data);
 
-        sound_util::set_sound_enabled(save_data.enable_sfx);
-
         bn::array<char, 10> expected_format_tag;
         bn::istring_base expected_format_tag_istring(expected_format_tag._data);
         bn::ostringstream expected_format_tag_stream(expected_format_tag_istring);
@@ -220,6 +218,8 @@ public:
 
             BN_LOG("Memory save_data initialised.");
         }
+
+        sound_util::set_sound_enabled(save_data.enable_sfx);
     }
 
     static bool music_enabled()

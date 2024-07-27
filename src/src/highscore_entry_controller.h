@@ -9,6 +9,8 @@
 #include "bn_sprite_ptr.h"
 #include "gj_big_sprite_font.h"
 
+#define Y_POS 50
+#define ARROWS_SPACING 5
 #define NAME_ALLOWED_CHARS_COUNT 27
 constexpr char name_allowed_chars[NAME_ALLOWED_CHARS_COUNT] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G',
@@ -45,14 +47,12 @@ private:
 public:
     highscore_entry_controller()
     {
-        BN_LOG("highscore_entry_controller");
-
         text_generator.set_center_alignment();
         text_generator.set_one_sprite_per_character(true);
 
         // Use the hat character as up/down arrows lol
-        up_arrow = text_generator.generate<1>(0, 55, "^")[0];
-        down_arrow = text_generator.generate<1>(0, 65, "^")[0];
+        up_arrow = text_generator.generate<1>(0, Y_POS - ARROWS_SPACING, "^")[0];
+        down_arrow = text_generator.generate<1>(0, Y_POS + ARROWS_SPACING, "^")[0];
         down_arrow->set_rotation_angle(180);
 
         auto last_name = memory::get_last_name();
@@ -83,7 +83,7 @@ public:
 
         auto name_array = build_name_array();
         auto name_string = bn::string<RECORD_NAME_LENGTH>(name_array.data(), RECORD_NAME_LENGTH);
-        text_generator.generate(0, 60, name_string, name_sprites);
+        text_generator.generate(0, Y_POS, name_string, name_sprites);
 
         up_arrow->set_visible(true);
         down_arrow->set_visible(true);

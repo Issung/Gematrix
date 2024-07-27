@@ -58,6 +58,13 @@ private:
     bn::string_view timeattack_records_levels_menu_title = "TIMEATTACK RECORDS";
     bn::string<LONGEST_TITLE_TEXT> records_display_menu_title_text = "";    // Title text for the records display menu. As `menu` uses a string view for the title this has to be stored somewhere constant.
 
+    void set_title_text(const bn::string_view& text)
+    {
+        text_generator.set_one_sprite_per_character(true);  // Generate one sprite per char so we can sin-wave them.
+        text_generator.generate(0, TITLE_Y, text, menu_title_sprites);
+        text_generator.set_one_sprite_per_character(false); // Set it back so other stuff doesn't have to worry about it.
+    }
+
     void generate_options_text()
     {
         for (int i = 0; i < current_menu->options.max_size(); ++i)
@@ -99,9 +106,7 @@ private:
         {
             // Title
             menu_title_sprites.clear();
-            text_generator.set_one_sprite_per_character(true);  // Generate one sprite per char so we can sin-wave them.
-            text_generator.generate(0, TITLE_Y, current_menu->title, menu_title_sprites);
-            text_generator.set_one_sprite_per_character(false); // Set it back so other stuff doesn't have to worry about it.
+            set_title_text(current_menu->title);
 
             // Options
             generate_options_text();
@@ -140,16 +145,19 @@ private:
             gc.hide();
 
             auto record_position = memory::is_record(gc.get_mode(), gc.get_level(), gc.get_gamemode_metric());
-            text_generator.generate(0, -50, "GAMEOVER", menu_title_sprites);
+            set_title_text("HISCORE!");
             
             if (record_position.has_value())
             {
-                auto ordinal_position = util::ordinal_string(record_position.value());  // Position text (e.g. 1st, 3rd, etc).
-                auto text = bn::format<menu_option::TEXT_MAX_LENGTH>("HISCORE! {}", ordinal_position);
-                text_generator.generate(0, -30, text, menu_options_sprites[0]);
+                auto mode_name = gc.get_mode() == game_mode::sprint ? "SPRINT" : "TIMEATTACK";
+                auto ordinal_position = util::ordinal_string(record_position.value());  // Ordinal position text (e.g. 1st, 3rd, etc).
+                auto mode_position_text = bn::format<menu_option::TEXT_MAX_LENGTH>("{} {}", mode_name, ordinal_position); // E.g: "TIMEATTACK 1st"
+                text_generator.generate(0, -30, mode_position_text, menu_options_sprites[0]);
+                
                 auto score_str = gc.get_gamemode_metric_display_string();
-                BN_LOG("SCORE STR: ", score_str);
                 text_generator.generate(0, -15, score_str, menu_options_sprites[1]);
+
+                text_generator.generate(0, 30, "ENTER NAME:", menu_options_sprites[2]);
             }
         }
     }
@@ -410,6 +418,7 @@ public:
         }
         else if (state == game_state::hiscore)
         {
+            sin_wave_title();
             auto name_entered = hec.update();
             
             if (name_entered)

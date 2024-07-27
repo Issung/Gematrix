@@ -162,6 +162,28 @@ namespace
         auto palette_ptr = palette.create_palette();
         return palette_ptr;
     }
+
+    const static bn::sprite_palette_ptr create_text_palette(bn::color foreground, bn::color background)
+    {
+        // The palette of the default font (white fg, black bg):
+        // First color is the transparent.
+        // Indexes:           0  1  2   3   4   5   6  7   8   9   10  11  12 13  14  15
+        // Red channel value: 0, 6, 13, 22, 28, 12, 9, 30, 12, 12, 31, 16, 0, 23, 31, 1
+
+        bn::color colors[16];
+        for (int i = 1; i < 16; i++)
+        {
+            // Set all other colors to red so we can see clearly if something went wrong.
+            colors[i] = bn::color(31, 0, 0);
+        }
+        colors[12] = background;
+        colors[14] = foreground;
+
+        auto span = bn::span<bn::color>(colors);
+        auto palette = bn::sprite_palette_item(span, bn::bpp_mode::BPP_4);
+        auto palette_ptr = palette.create_palette();
+        return palette_ptr;
+    }
 }
 
 

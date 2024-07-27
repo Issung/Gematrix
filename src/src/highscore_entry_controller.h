@@ -34,10 +34,10 @@ private:
     {
         int ret = 
             (c == '_') ? NAME_ALLOWED_CHARS_COUNT - 1 :
-            (c > 'A' && c < 'Z') ? c - 'A' :
+            (c >= 'A' && c <= 'Z') ? c - 'A' :
             256;
         
-        BN_ASSERT(ret != 256, "Character is now allowed: ", c);
+        BN_ASSERT(ret != 256, "Character is not allowed: ", c);
 
         return ret;
     }

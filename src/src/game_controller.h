@@ -54,6 +54,14 @@
 #define VALUE_X +116    // x position for values, with right-align generation.
 #define MATCH_SOUNDS_LEN 5  // The amount of unique match sounds.
 
+// Possible states of the game while `update()` is being called.
+enum class game_state
+{
+    countdown,  // Short 3-2-1 visual countdown before swaps are allowed to be made.
+    playing,    // The actual gameplay state, user can make all inputs freely.
+    gameover,   // Small period of animation before the gameover/hiscore screen appears.
+};
+
 // Handles user input, passing it to `board`, and managing `board_drawer`'s animations, tracking score and combo.
 class game_controller
 {
@@ -81,12 +89,13 @@ private:
     bn::sprite_palette_ptr gameover_grey_text = create_text_palette(bn::color(4, 4, 4), bn::color(1, 1, 1));
     bn::optional<bn::sprite_ptr> countdown_number_sprite;
     bn::vector<floating_text, 64> floating_texts;
+
+    game_state state;
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
     int displayed_score = 0;
-    bool displayed_score_bump = false;  // Bump the score display Y every frame it increments.
     int start_countdown_timer_frames = 0;    // How many frames remain until the game starts.
-    bool animating = false;
+    bool board_animating = false;   // Is the board currently animating.
 
     // Sound items for matches, increasing in pitch, use higher numbers for combos.
     bn::sound_item match_sounds[MATCH_SOUNDS_LEN] = {
@@ -106,7 +115,7 @@ private:
     int score_goal = 0; // For sprint game mode, what is the player's goal score.
     int time_limit_frames = -1; // For time-attack game mode, what is the player's time limit (in frames).
 
-    void animate_texts()
+    void animate_floating_texts()
     {
         for(auto it = floating_texts.begin(), end = floating_texts.end(); it != end;)
         {
@@ -125,6 +134,8 @@ private:
     // Put the game into a gameover state where everything is frozen and can no longer be updated.
     void gameover()
     {
+        state == game_state::gameover;
+
         for (auto& s : score_header_text) { s.set_palette(gameover_grey_text); }
         for (auto& s : combo_header_text) { s.set_palette(gameover_grey_text); }
         for (auto& s : time_header_text) { s.set_palette(gameover_grey_text); }
@@ -141,6 +152,13 @@ private:
         bd.gameover();
     }
 
+    void draw_score()
+    {
+        int jiggle = (displayed_score < score && displayed_score % 2 == 0 ? 1 : 0);    // Jiggle text up and down each frame while displayed score is incrementing.
+
+        score_number_sprites.clear();
+        text_generator.generate(VALUE_X, -62 - jiggle, bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
+    }
 public: 
     // Constructor.
     game_controller(background_controller& _background) : background(_background)
@@ -214,10 +232,11 @@ public:
     void reset()
     {
         // Reset game tracking state.
+        state = game_state::countdown;
         score = 0;
         displayed_score = 0;
         combo = 1;
-        animating = false;
+        board_animating = false;
         start_countdown_timer_frames = 60 * 3;
         timer_frames = 0;
 
@@ -253,46 +272,52 @@ public:
     // Returns true if game is complete, based on different conditions depending on game mode.
     bool update()
     {
-        if (start_countdown_timer_frames > 0)
+        if (state == game_state::countdown)
         {
-            int next_threshold;
-            if (start_countdown_timer_frames > 120)
+            if (start_countdown_timer_frames > 0)
             {
-                countdown_number_sprite = bn::sprite_items::three.create_sprite(0, 0);
-                next_threshold = 120;
-            }
-            else if (start_countdown_timer_frames > 60)
-            {
-                countdown_number_sprite = bn::sprite_items::two.create_sprite(0, 0);
-                next_threshold = 60;
+                int next_threshold;
+                if (start_countdown_timer_frames > 120)
+                {
+                    countdown_number_sprite = bn::sprite_items::three.create_sprite(0, 0);
+                    next_threshold = 120;
+                }
+                else if (start_countdown_timer_frames > 60)
+                {
+                    countdown_number_sprite = bn::sprite_items::two.create_sprite(0, 0);
+                    next_threshold = 60;
+                }
+                else
+                {
+                    countdown_number_sprite = bn::sprite_items::one.create_sprite(0, 0);
+                    next_threshold = 0;
+                }
+
+                //countdown_number_sprite.value().set_double_size_mode(bn::sprite_double_size_mode::ENABLED);
+                auto scale = bn::fixed(1.5);
+                scale -= 0.01 * (next_threshold - start_countdown_timer_frames);
+                countdown_number_sprite.value().set_scale(scale);
+
+                if (start_countdown_timer_frames == 180 || start_countdown_timer_frames == 120 || start_countdown_timer_frames == 60)
+                {
+                    bn::sound_items::countdown_beep.play();
+                }
+                else if (start_countdown_timer_frames == 1)
+                {
+                    bn::sound_items::countdown_finish_beep.play();
+                    music_util::maybe_play(bn::music_items::cirno);
+                }
+
+                --start_countdown_timer_frames;
             }
             else
             {
-                countdown_number_sprite = bn::sprite_items::one.create_sprite(0, 0);
-                next_threshold = 0;
+                countdown_number_sprite.reset();
+                state = game_state::playing;
             }
-
-            //countdown_number_sprite.value().set_double_size_mode(bn::sprite_double_size_mode::ENABLED);
-            auto scale = bn::fixed(1.5);
-            scale -= 0.01 * (next_threshold - start_countdown_timer_frames);
-            countdown_number_sprite.value().set_scale(scale);
-
-            if (start_countdown_timer_frames == 180 || start_countdown_timer_frames == 120 || start_countdown_timer_frames == 60)
-            {
-                bn::sound_items::countdown_beep.play();
-            }
-            else if (start_countdown_timer_frames == 1)
-            {
-                bn::sound_items::countdown_finish_beep.play();
-                music_util::maybe_play(bn::music_items::cirno);
-            }
-
-            --start_countdown_timer_frames;
         }
-        else
-        {
-            countdown_number_sprite.reset();
-        }
+
+        auto can_swap = !board_animating && state == game_state::playing; // Is the player allowed to swap a gem this frame
 
         // If A is held then prevent selector movement.
         if (bn::keypad::a_held())
@@ -319,7 +344,7 @@ public:
             }
 
             // Only execute swap if the board isn't currently animating.
-            if (!animating && (move_row != 0 || move_col != 0))
+            if (can_swap && (move_row != 0 || move_col != 0))
             {
                 b.swap(sel_row, sel_col, sel_row + move_row, sel_col + move_col);
                 bd.slide(sel_row, sel_col, sel_row + move_row, sel_col + move_col);
@@ -359,7 +384,7 @@ public:
         auto& spr_other_selector = bn::keypad::a_held() ? spr_selector : spr_selector_dirs;
         auto selector_point = positions[sel_row][sel_col];
         spr_current_selector.set_position(selector_point);
-        spr_current_selector.set_palette(animating ? selector_inactive_palette : selector_active_palette);
+        spr_current_selector.set_palette(can_swap ? selector_active_palette : selector_inactive_palette);
         spr_current_selector.set_visible(true);
         spr_other_selector.set_visible(false);
 
@@ -369,10 +394,10 @@ public:
             // When the drawer says the animations are complete, the state variable is whatever it
             // was last animation, by knowing what it was was last animation we can tell what animations just completed.
             // Then we can decide what to do next.
-            auto state = bd.state();
+            auto bdstate = bd.state();
 
             // When a slide or gem drops complete, delete matches again.
-            if (state == drawer_state::PlayingSlide || state == drawer_state::DroppingGems)
+            if (bdstate == drawer_state::PlayingSlide || bdstate == drawer_state::DroppingGems)
             {
                 auto matches = b.delete_matches();
 
@@ -407,23 +432,22 @@ public:
                 combo += 1;
             }
             // After matches are destroyed, drop gems.
-            else if (state == drawer_state::DestroyingMatches)
+            else if (bdstate == drawer_state::DestroyingMatches)
             {
                 auto drops = b.drop_gems();
                 bd.play_drops(drops);
             }
             else // State switches to `Waiting` wen play_matches() is called with an empty list.
             {
-                animating = false;
+                board_animating = false;
                 combo = 1;
             }
         }
         else
         {
-            animating = true;
+            board_animating = true;
         }
 
-        displayed_score_bump = false;
         if (displayed_score < score)
         {
             if (displayed_score % 2 == 0)
@@ -433,16 +457,10 @@ public:
             
             ++displayed_score;
         }
-        else if (!displayed_score_bump) // Equal
-        {
-            displayed_score_bump = true;
-        }
 
         // OPTIMISATION: Can optimise by only re-generating sprites if the displayed_score is different from last frame.
         // 6 characters can fit before overflowing onto the game board.
-        score_number_sprites.clear();
-        int jiggle = (displayed_score < score && displayed_score % 2 == 0 ? 1 : 0);    // Jiggle text up and down each frame while displayed score is incrementing.
-        text_generator.generate(VALUE_X, -62 - jiggle, bn::to_string<32>(displayed_score), score_number_sprites);   // TODO: Fix Y position to align with gems border when added.
+        draw_score();
 
         combo_text_sprites.clear();
         text_generator.generate(VALUE_X, -41, bn::format<4>("x{}", combo), combo_text_sprites);
@@ -452,19 +470,22 @@ public:
         timer_sprites.clear();
         text_generator.generate(VALUE_X, +49, time_str, timer_sprites);
 
-        if (start_countdown_timer_frames == 0)
+        if (state == game_state::playing)
         {
             ++timer_frames;
         }
 
-        animate_texts();
+        animate_floating_texts();
 
         // Check for game-end conditions.
         auto sprint_gameover = mode == game_mode::sprint && score >= score_goal;
         auto timeattack_gameover = mode == game_mode::timeattack && timer_frames > time_limit_frames;
         if (sprint_gameover || timeattack_gameover)
         {
-            // TODO: Overwrite the displayed score to the actual score so the freeze frame in the background it is correct.
+            // Overwrite the displayed score to the actual score so the freeze frame in the background it is correct.
+            displayed_score = score;
+            draw_score();
+
             gameover();
             return true;
         }

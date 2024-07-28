@@ -68,6 +68,7 @@ enum class gameover_state
     waiting_for_board_to_stop,  // Input disbled, wait for the board drawer animation to stop, then greyout the board.
     waiting_for_board_to_greyout,   // 1 second greying out the board gems one by one.
     waiting_for_score_counter_to_stop,  // Wait for displayed_score to reach the actual score, then greyout all text.
+    waiting_for_text_to_greyout,  // Period for greying out all text on the right of the game screen.
     waiting_for_menu_to_appear, // Short period after the score counter stops, 1 second wait, before showing the gameover/hiscore menu.
 };
 
@@ -111,6 +112,7 @@ private:
     BOARD_ANIM board_anim;
     int frames_waiting_for_board_to_greyout = 0;
     int frames_waiting_for_score_to_finish_counting = 0;    // How many frames spent waiting for score to finish counting.
+    int frames_waiting_for_text_to_greyout = 0;
     int frames_waiting_for_gameover_menu_to_appear = 0; // How many frames spent waiting for menu to appear after score finished counting.
 
     // Sound items for matches, increasing in pitch, use higher numbers for combos.
@@ -280,6 +282,7 @@ private:
         go_state = gameover_state::waiting_for_board_to_stop;
         frames_waiting_for_board_to_greyout = 0;
         frames_waiting_for_score_to_finish_counting = 0;
+        frames_waiting_for_text_to_greyout = 0;
         frames_waiting_for_gameover_menu_to_appear = 0;
     }
 public: 
@@ -426,21 +429,12 @@ public:
                     {
                         if (board_anim[r][c] == number)
                         {
-                            // Setting these will break both loops.
-                            row = r;
+                            row = r;    // Setting these will break the loops.
                             col = c;
-                            
-                            //goto found; // It's a game jam, why the hell not?!?! Exit both of the for loops
-
-                            // This looked like it introduced some UNDEFINED BEHAVIOUR, causing matches to occur while the countdown
-                            // was still happening, on gems that didn't even match...
                         }
                     }
                 }
 
-                //BN_ASSERT(false, "Index for board anim was not found, this should never get hit because of the goto above.");
-
-                //found: // goto label
                 bd.greyout(row, col);
 
                 if (frames_waiting_for_board_to_greyout == 59)
@@ -452,15 +446,42 @@ public:
             {
                 update_displayed_score();
 
-                if (frames_waiting_for_score_to_finish_counting++ >= 60 && displayed_score == score)
+                if (displayed_score == score)
                 {
-                    greyout_text();
-                    go_state = gameover_state::waiting_for_menu_to_appear;
+                    go_state = gameover_state::waiting_for_text_to_greyout;
                 }
+            }
+            else if (go_state == gameover_state::waiting_for_text_to_greyout)
+            {
+                // 7*8 = 56
+                // 7 -> 14 -> 21 -> 28 -> 35 -> 42 -> 49 -> 56 -> 63
+                //const int text_elements = 8;    // header + value for score, combo, time, limit/goal.
+                const int frames_per_element = 6;
+
+                if (frames_waiting_for_text_to_greyout >= frames_per_element * 8)
+                    go_state = gameover_state::waiting_for_menu_to_appear;
+                else if (frames_waiting_for_text_to_greyout > frames_per_element * 7)
+                    for (auto s : score_header_text) s.set_palette(gameover_grey_text);
+                else if (frames_waiting_for_text_to_greyout > frames_per_element * 6)
+                    for (auto s : score_number_sprites) s.set_palette(gameover_grey_text);
+                else if (frames_waiting_for_text_to_greyout > frames_per_element * 5)
+                    for (auto s : combo_header_text) s.set_palette(gameover_grey_text);
+                else if (frames_waiting_for_text_to_greyout > frames_per_element * 4)
+                    for (auto s : combo_text_sprites) s.set_palette(gameover_grey_text);
+                else if (frames_waiting_for_text_to_greyout > frames_per_element * 3)
+                    for (auto s : time_header_text) s.set_palette(gameover_grey_text);
+                else if (frames_waiting_for_text_to_greyout > frames_per_element * 2)
+                    for (auto s : timer_sprites) s.set_palette(gameover_grey_text);
+                else if (frames_waiting_for_text_to_greyout > frames_per_element * 1)
+                    for (auto s : goal_or_limit_header_text) s.set_palette(gameover_grey_text);
+                else if (frames_waiting_for_text_to_greyout > 0)
+                    for (auto s : goal_or_limit_text) s.set_palette(gameover_grey_text);
+
+                ++frames_waiting_for_text_to_greyout;
             }
             else if (go_state == gameover_state::waiting_for_menu_to_appear)
             {
-                if (frames_waiting_for_gameover_menu_to_appear++ >= 60)
+                if (++frames_waiting_for_gameover_menu_to_appear >= 6)
                 {
                     return true;
                 }

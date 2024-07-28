@@ -12,6 +12,7 @@
 #include "bn_sprite_actions.h"
 #include "bn_list.h"
 #include "board.h"
+#include "board_anims.h"
 
 // TODO: Do we have to define this here? T-T It's being used in anim_slide.
 static bn::fixed_point positions[board::rows][board::cols]; // The point of each drawn sprite, saved for use by the selector. [row][col]
@@ -180,6 +181,7 @@ namespace
 class board_drawer
 {
 private: 
+    static constexpr int delay_between_each_gem_drop = 2;
     board& b;
     bn::sprite_palette_ptr gameover_grey = create_palette(2, 2, 2);
     bn::vector<bn::sprite_ptr, board::total_gems> gem_sprites;  // Each gem sprite, can be accessed with `(row * board::cols) + col`.
@@ -351,119 +353,23 @@ public:
 
     void animate_random_drop_all_in()
     {
-        // TestMethodHere
+        auto anim = board_anims::get_random();
 
-        // TODO Make a util class that returns 2d int arrays with numbers 0 - 29 to indicate gem drop order, rather than repeat the anim logic for every variant.
-
-        int i = rand.get_int(4);
-        if (i == 0) animate_drop_all_in();
-        else if (i == 1) animate_drop_all_in_alternating_rows();
-        else if (i == 2) animate_scattered_drop_all_in();
-        else if (i == 3) animate_scattered_drop_all_in_row_by_row();
-        else BN_ASSERT(false, "Invalid value for random all-drop-in animation.");
-
-        current_state = drawer_state::DroppingGems;
-    }
-
-    static constexpr int delay_between_each_gem_drop = 2;
-
-    void animate_drop_all_in()
-    {
-        int delay = 0;
-
-        // TODO: Bottom row drop in from left-to-right, 2nd from bottom drop in from right-to-left, alternate up to top.
         for (int row = board::rows - 1; row >= 0; --row)
         {
             for (int col = board::cols - 1; col >= 0; --col)
             {
+                auto number = anim[row][col];
+
                 auto spr = gem_sprites[(row * board::cols) + col];
                 auto palette = colors[(int)b.gems[row][col]];
                 auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
-                slide.frames_delay = delay;
+                slide.frames_delay = number * delay_between_each_gem_drop;
                 slides.push_back(slide);
-                delay += delay_between_each_gem_drop;
             }
         }
-    }
 
-    void animate_drop_all_in_alternating_rows()
-    {
-        int delay = 0;
-
-        for (int row = board::rows - 1; row >= 0; --row)
-        {
-            auto even = row % 2 == 0;
-            for (int col = (even ? board::cols - 1 : 0); 
-                even ? col >= 0 : col < board::cols; 
-                even ? --col : ++col)
-            {
-                auto spr = gem_sprites[(row * board::cols) + col];
-                auto palette = colors[(int)b.gems[row][col]];
-                auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
-                slide.frames_delay = delay;
-                slides.push_back(slide);
-                delay += 2;
-            }
-        }
-    }
-
-    // Drop gems into random columns until full.
-    void animate_scattered_drop_all_in()
-    {
-        int total_slots = board::rows * board::cols;
-        bool filled[board::rows][board::cols] = {};
-        int filled_count = 0;
-
-        while (filled_count < total_slots)
-        {
-            int col = rand.get_int(board::cols);
-
-            for (int row = board::rows - 1; row >= 0; --row)
-            {
-                if (filled[row][col] == false)
-                {
-                    auto spr = gem_sprites[(row * board::cols) + col];
-                    auto palette = colors[(int)b.gems[row][col]];
-                    auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
-                    slide.frames_delay = filled_count * delay_between_each_gem_drop;
-                    slides.push_back(slide);
-
-                    filled[row][col] = true;
-                    filled_count += 1;
-                    break;
-                }
-            }
-        }
-    }
-
-    // Drop gems into random columns until full.
-    void animate_scattered_drop_all_in_row_by_row()
-    {
-        int delay = 0;
-        
-        for (int row = board::rows - 1; row >= 0; --row)
-        {
-            bool filled[board::cols] = {};
-            int filled_count = 0;
-
-            while (filled_count < board::cols)
-            {
-                int col = rand.get_int(board::cols);
-
-                if (filled[col] == false)
-                {
-                    auto spr = gem_sprites[(row * board::cols) + col];
-                    auto palette = colors[(int)b.gems[row][col]];
-                    auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
-                    slide.frames_delay = delay;
-                    slides.push_back(slide);
-
-                    filled[col] = true;
-                    filled_count += 1;
-                    delay += delay_between_each_gem_drop;
-                }
-            }
-        }
+        current_state = drawer_state::DroppingGems;
     }
 
     // Reset all animation state.

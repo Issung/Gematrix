@@ -48,7 +48,7 @@ private:
     menu records_display_menu = menu("X RECORDS", &records_levels_menu);    // Menu used for record list display, is altered to be used for different modes/levels.
     menu settings_menu = menu("SETTINGS", &main_menu);  // Options: [0] = SFX, [1] = MUSIC.
     menu pause_menu = menu("PAUSE");    // Pause menu used in game.
-    menu gameover_menu = menu("GAMEOVER", &main_menu);  // Gameover menu used when user's score was not a record. Hiscore entry is its own state.
+    menu gameover_menu = menu("GAMEOVER");  // Gameover menu used when user's score was not a record. Hiscore entry is its own state.
     menu* current_menu = &main_menu;
 
     // The user's desired game mode when on the `play_levels_menu` or `records_levels_menu`.

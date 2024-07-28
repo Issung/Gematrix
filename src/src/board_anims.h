@@ -111,6 +111,7 @@ private:
     }
 
 public:
+    // Fetch a randomly generated animation.
     static BOARD_ANIM get_random()
     {
         // Return constant test method here.

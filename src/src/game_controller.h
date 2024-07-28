@@ -49,6 +49,7 @@
 #include "bn_affine_bg_items_board.h"
 #include "bn_affine_bg_ptr.h"
 #include "background_controller.h"
+#include "board_anims.h"
 
 #define HEADER_X +70    // x position for headers, with left-align generation.
 #define VALUE_X +116    // x position for values, with right-align generation.
@@ -65,6 +66,7 @@ enum class game_state
 enum class gameover_state
 {
     waiting_for_board_to_stop,  // Input disbled, wait for the board drawer animation to stop, then greyout the board.
+    waiting_for_board_to_greyout,   // 1 second greying out the board gems one by one.
     waiting_for_score_counter_to_stop,  // Wait for displayed_score to reach the actual score, then greyout all text.
     waiting_for_menu_to_appear, // Short period after the score counter stops, 1 second wait, before showing the gameover/hiscore menu.
 };
@@ -97,7 +99,7 @@ private:
     bn::optional<bn::sprite_ptr> countdown_number_sprite;
     bn::vector<floating_text, 64> floating_texts;
 
-    game_state state;
+    game_state state = game_state::countdown;
     int sel_row = 0;    // Current row of the selector.
     int sel_col = 0;    // Current column of the selector.
     int displayed_score = 0;
@@ -106,6 +108,8 @@ private:
 
     // Gameover animation state
     gameover_state go_state;    // Current stage of the animation.
+    BOARD_ANIM board_anim;
+    int frames_waiting_for_board_to_greyout = 0;
     int frames_waiting_for_score_to_finish_counting = 0;    // How many frames spent waiting for score to finish counting.
     int frames_waiting_for_gameover_menu_to_appear = 0; // How many frames spent waiting for menu to appear after score finished counting.
 
@@ -146,10 +150,10 @@ private:
     // Grey out all the ui elements.
     void greyout_board()
     {
-        spr_selector.set_palette(gameover_grey);
-        spr_selector_dirs.set_palette(gameover_grey);
+        //spr_selector.set_palette(gameover_grey);      // Now invisible.
+        //spr_selector_dirs.set_palette(gameover_grey);
         background.brake();
-        bd.greyout();
+        //bd.greyout(); // Doing an animation for this now.
     }
 
     void greyout_text()
@@ -189,6 +193,16 @@ private:
             if (bdstate == drawer_state::PlayingSlide || bdstate == drawer_state::DroppingGems)
             {
                 auto matches = b.delete_matches();
+
+                /*if (!matches.empty())
+                {
+                    BN_LOG(
+                        "SOME MATCHES WERE FOUND.",
+                        "board_animations_complete: ", board_animations_complete, 
+                        "bdstate: ", (int)bdstate,
+                        "matches count: ", matches.size()
+                    );
+                }*/
 
                 for (auto& m : matches)
                 {
@@ -262,7 +276,9 @@ private:
         spr_selector.set_visible(false);
         spr_selector_dirs.set_visible(false);
         state = game_state::gameover;
+        board_anim = board_anims::get_random();
         go_state = gameover_state::waiting_for_board_to_stop;
+        frames_waiting_for_board_to_greyout = 0;
         frames_waiting_for_score_to_finish_counting = 0;
         frames_waiting_for_gameover_menu_to_appear = 0;
     }
@@ -389,6 +405,46 @@ public:
                 if (!board_animating)
                 {
                     greyout_board();
+                    go_state = gameover_state::waiting_for_board_to_greyout;
+                }
+            }
+            else if (go_state == gameover_state::waiting_for_board_to_greyout)
+            {
+                // This step waits 1 second (60 frames) while we wait for the gems on the board to greyout 1 by 1.
+                update_displayed_score();
+
+                ++frames_waiting_for_board_to_greyout;
+
+                // There are 5*6 gems (30) so we use the time waiting on this step halved to find the index of the next gem.
+                auto number = frames_waiting_for_board_to_greyout / 2;
+
+                // Search through the animation to find the next gem to grey out.
+                int row = -1, col = -1;   // Set these to -1, so once they are set the loops break.
+                for (int r = 0; r < board::rows && row == -1; ++r)
+                {
+                    for (int c = 0; c < board::cols && col == -1; ++c)
+                    {
+                        if (board_anim[r][c] == number)
+                        {
+                            // Setting these will break both loops.
+                            row = r;
+                            col = c;
+                            
+                            //goto found; // It's a game jam, why the hell not?!?! Exit both of the for loops
+
+                            // This looked like it introduced some UNDEFINED BEHAVIOUR, causing matches to occur while the countdown
+                            // was still happening, on gems that didn't even match...
+                        }
+                    }
+                }
+
+                //BN_ASSERT(false, "Index for board anim was not found, this should never get hit because of the goto above.");
+
+                //found: // goto label
+                bd.greyout(row, col);
+
+                if (frames_waiting_for_board_to_greyout == 59)
+                {
                     go_state = gameover_state::waiting_for_score_counter_to_stop;
                 }
             }

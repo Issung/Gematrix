@@ -226,15 +226,10 @@ public:
         //BN_LOG("Finished constructing board_drawer.");
     }
 
-    void greyout()
+    void greyout(int row, int col)
     {
-        for (int r = 0; r < board::rows; ++r)
-        {
-            for (int c = 0; c < board::cols; ++c)
-            {
-                gem_sprites[r * board::cols + c].set_palette(gameover_grey);
-            }
-        }
+        auto spr = gem_sprites[(row * board::cols) + col];
+        spr.set_palette(gameover_grey);
     }
 
     void hide()

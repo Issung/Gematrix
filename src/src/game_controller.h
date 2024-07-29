@@ -271,6 +271,149 @@ private:
         draw_score();
     }
 
+    void update_countdown()
+    {
+        if (start_countdown_timer_frames > 0)
+        {
+            int next_threshold;
+            if (start_countdown_timer_frames > 120)
+            {
+                countdown_number_sprite = bn::sprite_items::three.create_sprite(0, 0);
+                next_threshold = 120;
+            }
+            else if (start_countdown_timer_frames > 60)
+            {
+                countdown_number_sprite = bn::sprite_items::two.create_sprite(0, 0);
+                next_threshold = 60;
+            }
+            else
+            {
+                countdown_number_sprite = bn::sprite_items::one.create_sprite(0, 0);
+                next_threshold = 0;
+            }
+
+            //countdown_number_sprite.value().set_double_size_mode(bn::sprite_double_size_mode::ENABLED);
+            auto scale = bn::fixed(1.5);
+            scale -= 0.01 * (next_threshold - start_countdown_timer_frames);
+            countdown_number_sprite.value().set_scale(scale);
+
+            if (start_countdown_timer_frames == 180 || start_countdown_timer_frames == 120 || start_countdown_timer_frames == 60)
+            {
+                bn::sound_items::countdown_beep.play();
+            }
+            else if (start_countdown_timer_frames == 1)
+            {
+                bn::sound_items::countdown_finish_beep.play();
+                music_util::maybe_play(bn::music_items::cirno);
+            }
+
+            --start_countdown_timer_frames;
+        }
+        else
+        {
+            countdown_number_sprite.reset();
+            state = game_state::playing;
+        }
+    }
+
+    // Update routine for the gameover state.
+    bool update_gameover()
+    {
+        if (go_state == gameover_state::board_finishing_animation)
+        {
+            update_board();
+            update_displayed_score();
+
+            if (!board_animating)
+            {
+                greyout_board();
+                go_state = gameover_state::greying_out_board;
+            }
+        }
+        else if (go_state == gameover_state::greying_out_board)
+        {
+            // This step waits 1 second (60 frames) while we wait for the gems on the board to greyout 1 by 1.
+            update_displayed_score();
+
+            ++go_frames_greying_out_board;
+
+            // There are 5*6 gems (30) so we use the time waiting on this step halved to find the index of the next gem.
+            auto number = go_frames_greying_out_board / 2;
+
+            // Search through the animation to find the next gem to grey out.
+            int row = -1, col = -1;   // Set these to -1, so once they are set the loops break.
+            for (int r = 0; r < board::rows && row == -1; ++r)
+            {
+                for (int c = 0; c < board::cols && col == -1; ++c)
+                {
+                    if (go_board_greyout_anim[r][c] == number)
+                    {
+                        row = r;    // Setting these will break the loops.
+                        col = c;
+                    }
+                }
+            }
+
+            bd.greyout(row, col);
+
+            if (go_frames_greying_out_board == 59)
+            {
+                go_state = gameover_state::waiting_for_score_counter;
+            }
+        }
+        else if (go_state == gameover_state::waiting_for_score_counter)
+        {
+            update_displayed_score();
+
+            if (displayed_score == score)
+            {
+                go_state = gameover_state::greying_out_text;
+            }
+        }
+        else if (go_state == gameover_state::greying_out_text)
+        {
+            // 7*8 = 56
+            // 7 -> 14 -> 21 -> 28 -> 35 -> 42 -> 49 -> 56 -> 63
+            //const int text_elements = 8;    // header + value for score, combo, time, limit/goal.
+
+            if (go_frames_greying_out_text >= go_frames_per_text_element * 8)
+                go_state = gameover_state::small_pause_before_menu;
+            else if (go_frames_greying_out_text > go_frames_per_text_element * 7)
+                for (auto s : header_score) s.set_palette(gameover_grey_text);
+            else if (go_frames_greying_out_text > go_frames_per_text_element * 6)
+                for (auto s : value_score) s.set_palette(gameover_grey_text);
+            else if (go_frames_greying_out_text > go_frames_per_text_element * 5)
+                for (auto s : header_combo) s.set_palette(gameover_grey_text);
+            else if (go_frames_greying_out_text > go_frames_per_text_element * 4)
+                for (auto s : value_combo) s.set_palette(gameover_grey_text);
+            else if (go_frames_greying_out_text > go_frames_per_text_element * 3)
+                for (auto s : header_time) s.set_palette(gameover_grey_text);
+            else if (go_frames_greying_out_text > go_frames_per_text_element * 2)
+                for (auto s : value_time) s.set_palette(gameover_grey_text);
+            else if (go_frames_greying_out_text > go_frames_per_text_element * 1)
+                for (auto s : header_goal_or_limit) s.set_palette(gameover_grey_text);
+            else if (go_frames_greying_out_text > 0)
+                for (auto s : value_goal_or_limit) s.set_palette(gameover_grey_text);
+
+            ++go_frames_greying_out_text;
+        }
+        else if (go_state == gameover_state::small_pause_before_menu)
+        {
+            // Tiny pause matching the text element greyouts.
+            if (++go_frames_menu_pause >= go_frames_per_text_element)
+            {
+                return true;
+            }
+        }
+        else
+        {
+            BN_ASSERT(false, "Unknown go_state: ", (int)go_state);
+        }
+
+        animate_floating_texts();
+        return false;
+    }
+
     // Start the gameover animation process.
     // Checked for at the start of each `update()`.
     void start_gameover()
@@ -399,144 +542,14 @@ public:
     {
         if (state == game_state::gameover)
         {
-            if (go_state == gameover_state::board_finishing_animation)
-            {
-                update_board();
-                update_displayed_score();
-
-                if (!board_animating)
-                {
-                    greyout_board();
-                    go_state = gameover_state::greying_out_board;
-                }
-            }
-            else if (go_state == gameover_state::greying_out_board)
-            {
-                // This step waits 1 second (60 frames) while we wait for the gems on the board to greyout 1 by 1.
-                update_displayed_score();
-
-                ++go_frames_greying_out_board;
-
-                // There are 5*6 gems (30) so we use the time waiting on this step halved to find the index of the next gem.
-                auto number = go_frames_greying_out_board / 2;
-
-                // Search through the animation to find the next gem to grey out.
-                int row = -1, col = -1;   // Set these to -1, so once they are set the loops break.
-                for (int r = 0; r < board::rows && row == -1; ++r)
-                {
-                    for (int c = 0; c < board::cols && col == -1; ++c)
-                    {
-                        if (go_board_greyout_anim[r][c] == number)
-                        {
-                            row = r;    // Setting these will break the loops.
-                            col = c;
-                        }
-                    }
-                }
-
-                bd.greyout(row, col);
-
-                if (go_frames_greying_out_board == 59)
-                {
-                    go_state = gameover_state::waiting_for_score_counter;
-                }
-            }
-            else if (go_state == gameover_state::waiting_for_score_counter)
-            {
-                update_displayed_score();
-
-                if (displayed_score == score)
-                {
-                    go_state = gameover_state::greying_out_text;
-                }
-            }
-            else if (go_state == gameover_state::greying_out_text)
-            {
-                // 7*8 = 56
-                // 7 -> 14 -> 21 -> 28 -> 35 -> 42 -> 49 -> 56 -> 63
-                //const int text_elements = 8;    // header + value for score, combo, time, limit/goal.
-
-                if (go_frames_greying_out_text >= go_frames_per_text_element * 8)
-                    go_state = gameover_state::small_pause_before_menu;
-                else if (go_frames_greying_out_text > go_frames_per_text_element * 7)
-                    for (auto s : header_score) s.set_palette(gameover_grey_text);
-                else if (go_frames_greying_out_text > go_frames_per_text_element * 6)
-                    for (auto s : value_score) s.set_palette(gameover_grey_text);
-                else if (go_frames_greying_out_text > go_frames_per_text_element * 5)
-                    for (auto s : header_combo) s.set_palette(gameover_grey_text);
-                else if (go_frames_greying_out_text > go_frames_per_text_element * 4)
-                    for (auto s : value_combo) s.set_palette(gameover_grey_text);
-                else if (go_frames_greying_out_text > go_frames_per_text_element * 3)
-                    for (auto s : header_time) s.set_palette(gameover_grey_text);
-                else if (go_frames_greying_out_text > go_frames_per_text_element * 2)
-                    for (auto s : value_time) s.set_palette(gameover_grey_text);
-                else if (go_frames_greying_out_text > go_frames_per_text_element * 1)
-                    for (auto s : header_goal_or_limit) s.set_palette(gameover_grey_text);
-                else if (go_frames_greying_out_text > 0)
-                    for (auto s : value_goal_or_limit) s.set_palette(gameover_grey_text);
-
-                ++go_frames_greying_out_text;
-            }
-            else if (go_state == gameover_state::small_pause_before_menu)
-            {
-                // Tiny pause matching the text element greyouts.
-                if (++go_frames_menu_pause >= go_frames_per_text_element)
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                BN_ASSERT(false, "Unknown go_state: ", (int)go_state);
-            }
-
-            animate_floating_texts();
-            return false;
+            return update_gameover();
         }
 
         if (state == game_state::countdown)
         {
-            if (start_countdown_timer_frames > 0)
-            {
-                int next_threshold;
-                if (start_countdown_timer_frames > 120)
-                {
-                    countdown_number_sprite = bn::sprite_items::three.create_sprite(0, 0);
-                    next_threshold = 120;
-                }
-                else if (start_countdown_timer_frames > 60)
-                {
-                    countdown_number_sprite = bn::sprite_items::two.create_sprite(0, 0);
-                    next_threshold = 60;
-                }
-                else
-                {
-                    countdown_number_sprite = bn::sprite_items::one.create_sprite(0, 0);
-                    next_threshold = 0;
-                }
-
-                //countdown_number_sprite.value().set_double_size_mode(bn::sprite_double_size_mode::ENABLED);
-                auto scale = bn::fixed(1.5);
-                scale -= 0.01 * (next_threshold - start_countdown_timer_frames);
-                countdown_number_sprite.value().set_scale(scale);
-
-                if (start_countdown_timer_frames == 180 || start_countdown_timer_frames == 120 || start_countdown_timer_frames == 60)
-                {
-                    bn::sound_items::countdown_beep.play();
-                }
-                else if (start_countdown_timer_frames == 1)
-                {
-                    bn::sound_items::countdown_finish_beep.play();
-                    music_util::maybe_play(bn::music_items::cirno);
-                }
-
-                --start_countdown_timer_frames;
-            }
-            else
-            {
-                countdown_number_sprite.reset();
-                state = game_state::playing;
-            }
+            // We don't return from this state to let the board drop-in animation to play
+            // and allow the player to move / interact with the selector.
+            update_countdown();
         }
 
         auto can_swap = !board_animating && state == game_state::playing; // Is the player allowed to swap a gem this frame

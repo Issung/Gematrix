@@ -131,6 +131,7 @@ private:
         }
         else if (state == overall_state::paused)
         {
+            gc.pause();
             music_util::maybe_pause();
             bn::sound_items::pause.play();
             change_menu(&pause_menu, menu_sound::none);
@@ -162,7 +163,7 @@ private:
             }
         }
 
-        if (state != overall_state::ingame && hide_game)
+        if (state != overall_state::ingame && state != overall_state::paused && hide_game)
         {
             gc.hide();
         }
@@ -386,7 +387,7 @@ public:
     {
         if (state == overall_state::ingame)
         {
-            if (bn::keypad::start_pressed())
+            if (bn::keypad::start_pressed() && gc.can_pause())
             {
                 change_state(overall_state::paused);
             }

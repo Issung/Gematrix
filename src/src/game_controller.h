@@ -461,6 +461,32 @@ public:
         else { BN_ASSERT(false, "Unknown game mode: ", (int)mode); return bn::to_string<1>(0); }
     }
 
+    bool can_pause()
+    {
+        // Don't allow pause during the gameover state because restoring the 
+        // gameover animation upon resume is too difficult at this point.
+        return state != game_state::gameover;
+    }
+
+    // Greyout/freeze the game to be displayed in the background of the pause menu.
+    void pause()
+    {
+        for (auto& s : header_score) { s.set_palette(gameover_grey_text); }
+        for (auto& s : header_combo) { s.set_palette(gameover_grey_text); }
+        for (auto& s : header_time) { s.set_palette(gameover_grey_text); }
+        for (auto& s : header_goal_or_limit) { s.set_palette(gameover_grey_text); }
+        for (auto& s : value_goal_or_limit) { s.set_palette(gameover_grey_text); }
+        for (auto& s : value_time) { s.set_palette(gameover_grey_text); }
+        for (auto& ft : floating_texts) { ft.set_palette(gameover_grey_text); }
+        for (auto& s : value_score) { s.set_palette(gameover_grey_text); }
+        for (auto& s : value_combo) { s.set_palette(gameover_grey_text); }
+        if (countdown_number_sprite.has_value()) { countdown_number_sprite->set_visible(false); }
+        spr_selector.set_palette(gameover_selector);
+        spr_selector_dirs.set_palette(gameover_selector);
+        bd.greyout();
+        background.freeze();
+    }
+
     void hide()
     {
         for (auto& s : header_score) { s.set_visible(false); }
@@ -493,6 +519,7 @@ public:
         spr_selector.set_visible(true);
         spr_selector_dirs.set_visible(false);
         bd.show();
+        background.thaw();
     }
 
     void reset()

@@ -232,6 +232,18 @@ public:
         spr.set_palette(gameover_grey);
     }
 
+    // Greyout whole board.
+    void greyout()
+    {
+        for (int r = 0; r < board::rows; ++r)
+        {
+            for (int c = 0; c < board::cols; ++c)
+            {
+                greyout(r, c);
+            }
+        }
+    }
+
     void hide()
     {
         for (int r = 0; r < board::rows; ++r)
@@ -249,6 +261,9 @@ public:
         {
             for (int c = 0; c < board::cols; ++c)
             {
+                auto palette_index = (int)b.gems[r][c];
+                auto palette = colors[palette_index];
+                gem_sprites[r * board::cols + c].set_palette(palette);
                 gem_sprites[r * board::cols + c].set_visible(true);
             }
         }

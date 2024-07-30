@@ -22,8 +22,19 @@ private:
     bn::fixed speed_min = SPEED_MIN_DEFAULT;
     bn::fixed speed = 1.0;
     bool braking = false;
+    bool frozen = false;
 
 public:
+    void thaw()
+    {
+        frozen = false;
+    }
+
+    void freeze()
+    {
+        frozen = true;
+    }
+
     // Apply brakes to the background speed, slowing it to a halt until `reset()`.
     void brake()
     {
@@ -35,6 +46,7 @@ public:
     void reset()
     {
         braking = false;
+        frozen = false;
         speed_min = SPEED_MIN_DEFAULT;
         speed = speed_min;
         x_offset = rand.get_fixed(-OFFSET_MAX, OFFSET_MAX);
@@ -59,6 +71,11 @@ public:
 
     void update()
     {
+        if (frozen)
+        {
+            return;
+        }
+
         if (speed > speed_min)
         {
             speed -= SPEED_DECREASE;

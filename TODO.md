@@ -61,11 +61,12 @@
     * ~~Disable SFX~~
     * ~~Disable music~~
 * Refine gameover visuals
-    Currently too rough around the edges, jumps straight to the end screne with no warning.
+    Currently too rough around the edges, jumps straight to the end screen with no warning.
     * Countdown to gameover sounds (for timeattack mode)
-    * Freeze-frame
-    * Grey out the gameboard
-    * Display gameover screen with gameboard in the background
+    * ~~Freeze-frame~~
+    * ~~Greyout the gameboard~~
+    * ~~Greyout text~~
+    * ~~Display gameover screen with gameboard in the background~~
     * Probably use this new greyed out background state for the pause menu too.
 
 # MAYBES

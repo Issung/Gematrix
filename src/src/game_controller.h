@@ -108,7 +108,7 @@ private:
     bool board_animating = false;   // Is the board currently animating.
 
     // Gameover animation state, prefixed with `go_`.
-    const int go_frames_per_text_element = 6;
+    const int go_frames_per_text_element = 4;
     gameover_state go_state;    // Current stage of the gameover animation.
     BOARD_ANIM go_board_greyout_anim;   // Animation order for the board greyout.
     int go_frames_greying_out_board = 0;    // How many frames spent waiting for board to grey out.
@@ -332,13 +332,11 @@ private:
         }
         else if (go_state == gameover_state::greying_out_board)
         {
-            // This step waits 1 second (60 frames) while we wait for the gems on the board to greyout 1 by 1.
+            // This step waits 29 frames, greying out the board 1 by 1 until fully greyedout.
             update_displayed_score();
 
-            ++go_frames_greying_out_board;
-
-            // There are 5*6 gems (30) so we use the time waiting on this step halved to find the index of the next gem.
-            auto number = go_frames_greying_out_board / 2;
+            // 5 rows * 6 cols = 30 gems, this frame counter ranges 0 - 29
+            auto number = go_frames_greying_out_board++;
 
             // Search through the animation to find the next gem to grey out.
             int row = -1, col = -1;   // Set these to -1, so once they are set the loops break.
@@ -356,7 +354,7 @@ private:
 
             bd.greyout(row, col);
 
-            if (go_frames_greying_out_board == 59)
+            if (go_frames_greying_out_board == 30)  // After the 29th increment, 30 frames, move to next animation stage.
             {
                 go_state = gameover_state::waiting_for_score_counter;
             }

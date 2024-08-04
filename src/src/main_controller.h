@@ -447,8 +447,12 @@ public:
         {
             BN_ASSERT(false, "Invalid game state");
         }
+    }
 
-        bn::core::update();
+    // Mini update to be called by main.cpp while fading out splash screen, disallow input.
+    void mini_update()
+    {
+        sin_wave_title();
     }
 
     // Constructor.

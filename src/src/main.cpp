@@ -33,6 +33,10 @@ int main()
     }
     bn::blending::set_transparency_alpha(1);
 
+    // Build the game controllers now, so they are visible when fading out.
+    auto bgc = background_controller();
+    auto controller = main_controller(bgc);
+
     // Pause.
     for (int i = 0; i < 240; ++i)   // 4 seconds max.
     {
@@ -41,12 +45,9 @@ int main()
             break;
         }
 
+        controller.mini_update();
         bn::core::update();
     }
-
-    // Build the game controllers now, so they are visible when fading out.
-    auto bgc = background_controller();
-    auto controller = main_controller(bgc);
 
     // Fade out.
     for (int i = 0; i < 30; ++i)

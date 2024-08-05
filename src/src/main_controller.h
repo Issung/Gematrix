@@ -30,6 +30,7 @@ private:
     game_controller gc;
     highscore_entry_controller hec;
     background_controller& background;
+    unsigned int frames_since_boot = 0; // Used as random seed, taken every time a game is started.
     overall_state state = overall_state::menus;
     int selected_index = 0;
     bn::sprite_text_generator text_generator = bn::sprite_text_generator(gj::fixed_32x64_sprite_font);
@@ -287,7 +288,7 @@ private:
             else if (key >= menu_option_key::play_level0 && key <= menu_option_key::play_level2)
             {
                 auto level = (int)key - (int)menu_option_key::play_level0;
-                gc.newgame(levels_mode, level);
+                gc.newgame(levels_mode, level, frames_since_boot);
                 change_state(overall_state::ingame);
             }
 
@@ -370,7 +371,7 @@ private:
             else if (key == menu_option_key::restart)
             {
                 music_util::maybe_stop();
-                gc.reset();
+                gc.reset(frames_since_boot);
                 change_state(overall_state::ingame);
             }
             else if (key == menu_option_key::quit)
@@ -447,11 +448,14 @@ public:
         {
             BN_ASSERT(false, "Invalid game state");
         }
+
+        ++frames_since_boot;
     }
 
     // Mini update to be called by main.cpp while fading out splash screen, disallow input.
     void mini_update()
     {
+        ++frames_since_boot;
         sin_wave_title();
     }
 

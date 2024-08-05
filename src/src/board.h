@@ -6,6 +6,7 @@
 #include "bn_vector.h"
 #include "gem_type.h"
 #include "match.h"
+#include "bn_seed_random.h"
 
 #define match_collection bn::vector<match, 20>
 #define gem_drops_collection bn::vector<gem_drop, board::total_gems>
@@ -43,7 +44,7 @@ public: // Public fields
     static const int max_colors = 6;   // The amount of colors.
     gem_type gems[rows][cols];  // [row][col]
 private:    // Private fields
-    bn::random rand = bn::random();
+    bn::seed_random rand = bn::seed_random();
 
     // Randomly generate a new gem.
     gem_type new_gem()
@@ -62,6 +63,11 @@ public:
     board()
     {
         new_board();
+    }
+
+    void set_seed(unsigned int frames_since_boot)
+    {
+        rand.set_seed(frames_since_boot);
     }
 
     // TODO: Return collection of gem drops and get board_drawer to animate it.

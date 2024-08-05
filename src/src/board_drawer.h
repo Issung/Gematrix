@@ -192,7 +192,6 @@ private:
     bn::list<anim_destroy, board::total_gems> destroys;
     // Move to ROM to avoid ram usage. https://gvaliente.github.io/butano/faq.html
     drawer_state current_state;
-    bn::random rand = bn::random();
     
     void draw_gem(int row, int col)
     {

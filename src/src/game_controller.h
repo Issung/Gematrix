@@ -522,7 +522,7 @@ public:
         background.thaw();
     }
 
-    void reset()
+    void reset(unsigned int frames_since_boot)
     {
         // Reset game tracking state.
         state = game_state::countdown;
@@ -533,7 +533,8 @@ public:
         start_countdown_timer_frames = 60 * 3;
         timer_frames = 0;
 
-        // Create new board.
+        // Set random seed & create new board.
+        b.set_seed(frames_since_boot);
         b.new_board();
 
         // Reset GUI.
@@ -544,9 +545,9 @@ public:
         background.reset();
     }
 
-    void newgame(game_mode _mode, int _level)
+    void newgame(game_mode _mode, int _level, unsigned int frames_since_boot)
     {
-        reset();
+        reset(frames_since_boot);
         this->mode = _mode;
         this->level = _level;
         this->score_goal = mode == game_mode::sprint ? levels::sprint[level] : 0;

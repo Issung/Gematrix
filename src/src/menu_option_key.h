@@ -15,7 +15,7 @@ enum class menu_option_key : int
     // Play Menu
     play_sprint,         // Race to X amount of points.
     play_timeattack,    // How many points can be gotten in X amount of time.
-    play_survival,       // How long can you stay alive against a decreasing lifespan by gaining more points.
+    //play_survival,       // How long can you stay alive against a decreasing lifespan by gaining more points.
 
     // Play Menu (Level Select)
     play_level0,

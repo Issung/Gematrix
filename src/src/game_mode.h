@@ -6,5 +6,5 @@ enum class game_mode : int
 {
     sprint,
     timeattack,
-    survival,
+    //survival,
 };

@@ -470,7 +470,7 @@ public:
         
         play_menu.options.push_back(menu_option("SPRINT", menu_option_key::play_sprint));
         play_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::play_timeattack));
-        play_menu.options.push_back(menu_option("SURVIVAL", menu_option_key::play_survival));
+        //play_menu.options.push_back(menu_option("SURVIVAL", menu_option_key::play_survival));
 
         records_menu.options.push_back(menu_option("SPRINT", menu_option_key::records_sprint));
         records_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::records_timeattack));

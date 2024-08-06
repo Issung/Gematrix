@@ -8,7 +8,7 @@ class menu_option
 {
 public:
     // Must be long enough for records display (name + score).
-    constexpr static int TEXT_MAX_LENGTH = 14;
+    constexpr static int TEXT_MAX_LENGTH = 28;
 
     bn::string<TEXT_MAX_LENGTH> text;    // Text to display on screen for this menu item.
     menu_option_key key;   // Key to identify the option by so that when selected appropriate actions can be taken.

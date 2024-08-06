@@ -11,6 +11,7 @@ enum class menu_option_key : int
     play,
     records,
     settings,
+    credits,
 
     // Play Menu
     play_sprint,         // Race to X amount of points.

@@ -48,6 +48,7 @@ private:
     menu records_levels_menu = menu("RECORDS LEVEL", &records_menu);    // Menu used for record level select, is altered to be used for different modes.
     menu records_display_menu = menu("X RECORDS", &records_levels_menu);    // Menu used for record list display, is altered to be used for different modes/levels.
     menu settings_menu = menu("SETTINGS", &main_menu);  // Options: [0] = SFX, [1] = MUSIC.
+    menu credits_menu = menu("CREDITS", &main_menu);
     menu pause_menu = menu("PAUSE");    // Pause menu used in game.
     menu gameover_menu = menu("GAMEOVER");  // Gameover menu used when user's score was not a record. Hiscore entry is its own state.
     menu* current_menu = &main_menu;
@@ -81,7 +82,7 @@ private:
             text_generator.generate(0, y_pos + (i * 20), current_menu->options[i].text, menu_options_sprites[i]);
 
             // Annoyingly set the palette of each sprite here so they don't all flicker as white for one frame.
-            if (current_menu != &records_display_menu)  // Except when on records_display_menu so all records display in normal highlighted palette.
+            if (current_menu->interactable)  // Except for non interactable menus, so all options display in normal highlighted palette.
                 for (auto s : menu_options_sprites[i])
                     s.set_palette(i == selected_index ? palette_highlight : palette_grey);
         }
@@ -199,9 +200,6 @@ private:
     {
         sin_wave_title();
 
-        // Records display menu is not interactable.
-        auto menu_interactable = current_menu != &records_display_menu;
-
         if (bn::keypad::b_pressed())
         {
             if (current_menu->previous_menu != nullptr)
@@ -210,7 +208,7 @@ private:
             }
         }
 
-        if (!menu_interactable)
+        if (!current_menu->interactable)
         {
             return;
         }
@@ -256,6 +254,10 @@ private:
             else if (key == menu_option_key::settings)
             {
                 change_menu(&settings_menu, menu_sound::ok);
+            }
+            else if (key == menu_option_key::credits)
+            {
+                change_menu(&credits_menu, menu_sound::ok);
             }
 
             // MENU: PLAY
@@ -475,6 +477,7 @@ public:
         main_menu.options.push_back(menu_option("PLAY", menu_option_key::play));
         main_menu.options.push_back(menu_option("RECORDS", menu_option_key::records));
         main_menu.options.push_back(menu_option("SETTINGS", menu_option_key::settings));
+        main_menu.options.push_back(menu_option("CREDITS", menu_option_key::credits));
         
         play_menu.options.push_back(menu_option("SPRINT", menu_option_key::play_sprint));
         play_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::play_timeattack));
@@ -486,14 +489,23 @@ public:
         settings_menu.options.push_back(menu_option(memory::sfx_enabled() ? "SFX ON" : "SFX OFF", menu_option_key::sfx_toggle));
         settings_menu.options.push_back(menu_option(memory::music_enabled() ? "MUSIC ON" : "MUSIC OFF", menu_option_key::music_toggle));
 
+        credits_menu.interactable = false;
+        credits_menu.options.push_back(menu_option("RUNNING ON BUTANO", menu_option_key::noop));
+        credits_menu.options.push_back(menu_option("SHOUT-OUT GBADEV DISCORD", menu_option_key::noop));
+        credits_menu.options.push_back(menu_option("ALL CREDITS & SOURCE CODE:", menu_option_key::noop));
+        credits_menu.options.push_back(menu_option("GITHUB.COM/ISSUNG/GBAJAM2024", menu_option_key::noop));
+        credits_menu.options.push_back(menu_option("FOLLOW :) X.COM/ISSUNGEE", menu_option_key::noop));
+
         pause_menu.options.push_back(menu_option("RESUME", menu_option_key::resume));
         pause_menu.options.push_back(menu_option("RESTART", menu_option_key::restart));
         pause_menu.options.push_back(menu_option("QUIT", menu_option_key::quit));
 
-        gameover_menu.options.push_back(menu_option("RETRY", menu_option_key::restart));
-        gameover_menu.options.push_back(menu_option("MENU", menu_option_key::quit));
         gameover_menu.options_count = 2;
         gameover_menu.options_y_position = 30;
+        gameover_menu.options.push_back(menu_option("RETRY", menu_option_key::restart));
+        gameover_menu.options.push_back(menu_option("MENU", menu_option_key::quit));
+
+        records_display_menu.interactable = false;
 
         change_menu(&main_menu, menu_sound::none);
     }

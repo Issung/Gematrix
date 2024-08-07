@@ -40,7 +40,7 @@ private:
     bn::fixed title_sin_angle_inc = 5;
     bn::vector<bn::vector<bn::sprite_ptr, LONGEST_OPTION_TEXT>, MAX_OPTIONS_PER_SCREEN> menu_options_sprites;
 
-    menu main_menu = menu("GEMMA");    // TODO: Think of name for game.
+    menu main_menu = menu("GEMATRIX");
     menu play_menu = menu("PLAY", &main_menu);  // Game start mode selection.
     menu play_levels_menu = menu("LEVEL", &play_menu);  // After the user selects a mode on the `play_menu`, they select the level on this one.
     menu records_menu = menu("RECORDS", &main_menu);    // Record viewing game mode selection.

@@ -20,6 +20,10 @@ public:
     menu* previous_menu = nullptr;
     bn::vector<menu_option, MAX_OPTIONS_PER_SCREEN> options;
 
+    // Is this menu interactable or is it just meant to display data.
+    // E.g. Records or credits.
+    bool interactable = true;
+
     // The below optionals are here for the hiscore screen, it needs to display more things than just menu options, that
     // aren't selectable, so they will use the options sprites beyond `options_count` and set a custom y position.
 
@@ -61,7 +65,7 @@ public:
         //  3 items: -20
         //  4 items: -30
         //  5 items: -25 (break the formula because it gets too close to the title).
-        auto oc = get_options_count();
-        return oc == 5 ? -25 : -((oc - 1) * (OPTIONS_Y_GAP / 2));
+        auto count = get_options_count();
+        return count == 5 ? -25 : (-((count - 1) * (OPTIONS_Y_GAP / 2))) + 5;
     }
 };

@@ -4,6 +4,7 @@
 #include "bn_core.h"
 #include "bn_log.h"
 #include "bn_sprite_items_gem.h"
+#include "bn_sprite_items_wildcard.h"
 #include "bn_sprite_palette_item.h"
 #include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_ptr.h"
@@ -13,6 +14,8 @@
 #include "bn_list.h"
 #include "board.h"
 #include "board_anims.h"
+#include "bn_sprite_palette_actions.h"
+#include "bn_sprite_palettes_actions.h"
 
 // TODO: Do we have to define this here? T-T It's being used in anim_slide.
 static bn::fixed_point positions[board::rows][board::cols]; // The point of each drawn sprite, saved for use by the selector. [row][col]
@@ -189,19 +192,96 @@ private:
     bn::list<anim_destroy, board::total_gems> destroys;
     // Move to ROM to avoid ram usage. https://gvaliente.github.io/butano/faq.html
     drawer_state current_state;
-    bn::random rand = bn::random();
-public:
-    const bn::sprite_palette_ptr colors[board::max_colors] =
+    
+    void draw_gem(int row, int col)
     {
-        create_palette(31, 0, 0),   // Red
-        create_palette(0, 31, 0),   // Green
-        create_palette(0, 0, 31),   // Blue
-        create_palette(31, 0, 31),  // Purple
-        create_palette(31, 16, 0),  // Orange
-        create_palette(31, 31, 31), // White (Wildcard)
-        // No color for empty at the moment, just make the sprite invisible.
-    };
+        auto gem_sprite = gem_sprites[(row * board::cols) + col];
+        auto gem_value = b.gems[row][col];
 
+        if (gem_value == gem_type::Empty)
+        {
+            gem_sprite.set_visible(false);
+        }
+        else
+        {
+            auto palette = colors[(int)gem_value];
+            gem_sprite.set_palette(palette);
+            gem_sprite.set_visible(true);
+        }
+    }
+
+    void draw_all_gems()
+    {
+        for (int r = 0; r < board::rows; ++r)
+        {
+            for (int c = 0; c < board::cols; ++c)
+            {
+                draw_gem(r, c);
+            }
+        }
+    }
+    
+    void animate_slides()
+    {
+        auto it = slides.begin();
+        auto end = slides.end();
+        while (it != end)
+        {
+            auto done = it->update();
+            //BN_LOG("Processing slide anim. index: ", i, ". Done: ", done);
+
+            if (done == false)
+            {
+                ++it;
+            }
+            else
+            {
+                // Remove from list.
+                it = slides.erase(it);
+            }
+        }
+    }
+
+    void animate_destroys()
+    {
+        auto it = destroys.begin();
+        auto end = destroys.end();
+        while (it != end)
+        {
+            auto done = it->action.done();
+            //BN_LOG("Processing destroy anim. index: ", i, ". Done: ", done);
+
+            if (done == false)
+            {
+                it->action.update();
+                ++it;
+            }
+            else
+            {
+                // Remove from list.
+                it = destroys.erase(it);
+            }
+        }
+    }
+
+public:
+    // Array must line up with gem_types enum values.
+    /*const*/ bn::sprite_palette_ptr colors[board::max_colors] =    // `const` keyword breaks modifying the wildcard palette.
+    {
+        /* 0 */ create_palette(31, 0, 0),   // Red
+        /* 1 */ create_palette(0, 31, 0),   // Green
+        /* 2 */ create_palette(0, 0, 31),   // Blue
+        /* 3 */ create_palette(31, 0, 31),  // Purple
+        /* 4 */ create_palette(31, 16, 0),  // Orange
+        /* 5 */ bn::sprite_items::gem.palette_item().create_palette(),  // Wildcard
+        // No color for empty, just make the sprite invisible.
+    };
+    // The palette defined in the gem sprite is a gradient between the 5 other standard colors.
+    // We then rotate the palette in each update() call to give it an alternating colors effect.
+    // Concept inspired by `\butano\examples\palettes\src\main.cpp`.
+    bn::sprite_palette_rotate_by_action palette_rotate_action = bn::sprite_palette_rotate_by_action(colors[5], 15, 1);   // 2nd arg is the amount of frames per rotate.
+
+    // Constructor.
     board_drawer(board& _b) : b(_b)
     {
         for (int r = 0; r < board::rows; ++r)
@@ -214,10 +294,9 @@ public:
                 auto y = (30 * r) - 60;
                 positions[r][c] = bn::fixed_point(x, y);
                 auto gem_sprite = bn::sprite_items::gem.create_sprite(x, y);
-                auto palette_index = (int)b.gems[r][c];
-                auto palette = colors[palette_index];
-                gem_sprite.set_palette(palette);
                 gem_sprites.push_back(gem_sprite);
+
+                draw_gem(r, c);
 
                 //BN_LOG("Made gem r: ", r, " c: ", c);
             }
@@ -355,6 +434,8 @@ public:
     // Returns true if animations are complete.
     bool update()
     {
+        palette_rotate_action.update();
+
         animate_slides();
         animate_destroys();
 
@@ -398,74 +479,7 @@ public:
             }
         }
 
-        set_all_gems_palette();
-    }
-
-private:
-    void set_all_gems_palette()
-    {
-        for (int r = 0; r < board::rows; ++r)
-        {
-            for (int c = 0; c < board::cols; ++c)
-            {
-                auto gem_sprite = gem_sprites[(r * board::cols) + c];
-                auto gem_value = b.gems[r][c];
-
-                if (gem_value == gem_type::Empty)
-                {
-                    gem_sprite.set_visible(false);
-                }
-                else
-                {
-                    auto palette = colors[(int)gem_value];
-                    gem_sprite.set_palette(palette);
-                    gem_sprite.set_visible(true);
-                }
-            }
-        }
-    }
-    
-    void animate_slides()
-    {
-        auto it = slides.begin();
-        auto end = slides.end();
-        while (it != end)
-        {
-            auto done = it->update();
-            //BN_LOG("Processing tween index: ", i, ". Done: ", done);
-
-            if (done == false)
-            {
-                ++it;
-            }
-            else
-            {
-                // Remove from list.
-                it = slides.erase(it);
-            }
-        }
-    }
-
-    void animate_destroys()
-    {
-        auto it = destroys.begin();
-        auto end = destroys.end();
-        while (it != end)
-        {
-            auto done = it->action.done();
-            //BN_LOG("Processing tween index: ", i, ". Done: ", done);
-
-            if (done == false)
-            {
-                it->action.update();
-                ++it;
-            }
-            else
-            {
-                // Remove from list.
-                it = destroys.erase(it);
-            }
-        }
+        draw_all_gems();
     }
 };
 

@@ -1,10 +1,12 @@
 #ifndef BOARD
 #define BOARD
 
-#include "bn_vector.h"
+#include "bn_log.h"
 #include "bn_random.h"
-#include "match.h"
+#include "bn_vector.h"
 #include "gem_type.h"
+#include "match.h"
+#include "bn_seed_random.h"
 
 #define match_collection bn::vector<match, 20>
 #define gem_drops_collection bn::vector<gem_drop, board::total_gems>
@@ -42,16 +44,30 @@ public: // Public fields
     static const int max_colors = 6;   // The amount of colors.
     gem_type gems[rows][cols];  // [row][col]
 private:    // Private fields
-    bn::random rand = bn::random();
+    bn::seed_random rand = bn::seed_random();
 
-    gem_type gen_new_gem()
+    // Randomly generate a new gem.
+    gem_type new_gem()
     {
-        return (gem_type)rand.get_int(board::max_colors - 1); // TODO: No wildcards for now
+        // 1 in 15 chance to be a wildcard.
+        if (rand.get_int(15) == 14)
+        {
+            return gem_type::Wildcard;
+        }
+        else
+        {
+            return (gem_type)rand.get_int(board::max_colors - 1);
+        }
     }
 public: 
     board()
     {
         new_board();
+    }
+
+    void set_seed(unsigned int frames_since_boot)
+    {
+        rand.set_seed(frames_since_boot);
     }
 
     // TODO: Return collection of gem drops and get board_drawer to animate it.
@@ -63,7 +79,7 @@ public:
             {
                 for (int c = 0; c < board::cols; c++)
                 {
-                    auto val = gen_new_gem();
+                    auto val = new_gem();
                     gems[r][c] = val;
                     //BN_LOG("Generated gem ", r, ",", c, ": ", (int)val);
                 }
@@ -140,7 +156,7 @@ public:
                     {
                         newGemsInCol += 1;
 
-                        auto new_gem_type = gen_new_gem();
+                        auto new_gem_type = new_gem();
                         gems[row][col] = new_gem_type;
                         drops.push_back(gem_drop(col, -newGemsInCol, row, new_gem_type));
                     }
@@ -159,7 +175,7 @@ public:
             {
                 if (gems[r][c] == gem_type::Empty)
                 {
-                    gems[r][c] = gen_new_gem();
+                    gems[r][c] = new_gem();
                 }
             }
         }
@@ -290,10 +306,10 @@ public:
 
                 // Special case, if the last gem of the last sequence was a wildcard, we must carry it over so it can be
                 // used as the start of the next sequence.
-                auto lastSequenceLastElement = *lastSequence.end();
+                auto lastSequenceLastElement = lastSequence[lastSequence.size() - 1];
                 if (lastSequenceLastElement == gem_type::Wildcard)
                 {
-                    currentSequence.push_back(lastSequenceLastElement);
+                    currentSequence.push_back(gem_type::Wildcard);
                 }
 
                 currentSequence.push_back(row[i]);
@@ -324,9 +340,9 @@ private:
 
         auto length = sequence.size();
 
-        for (int i = 0; i < length; i++)
+        for (int i = 0; i < length; ++i)
         {
-            for (int j = 0; j < length; j++)
+            for (int j = 0; j < length; ++j)
             {
                 if (i != j)
                 {

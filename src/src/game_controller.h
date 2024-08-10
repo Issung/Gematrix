@@ -304,7 +304,7 @@ private:
             else if (start_countdown_timer_frames == 1)
             {
                 bn::sound_items::countdown_finish_beep.play();
-                music_util::maybe_play(bn::music_items::cirno);
+                music_util::play_random();
             }
 
             --start_countdown_timer_frames;

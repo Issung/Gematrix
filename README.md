@@ -5,6 +5,12 @@ My first and hopefully not last Game Boy Advance game! Written in C++ with Butan
 ## Credits
 * [Butano](https://github.com/GValiente/butano) by [GValiente](https://github.com/GValiente/butano).
 * Font by [2Pblog1](https://x.com/2pblog1).
+* Menu music: [pms_are1.it by Powerack](https://modarchive.org/index.php?request=view_by_moduleid&query=162054)
+* Game music #1: [4_RNDD!.xm by Drozerix](https://modarchive.org/index.php?request=view_by_moduleid&query=172898).
+* Game music #2: [biotech.rth by Kokesz](https://modarchive.org/index.php?request=view_by_moduleid&query=174348).
+* Game music #3: [Cirno.it by Maris](https://modarchive.org/index.php?request=view_by_moduleid&query=185072).
+* Game music #4: [Fckdarules.xm by JAM](https://modarchive.org/index.php?request=view_by_moduleid&query=169181).
+* Game music #5: [L3V3L_33 by Drozerix](https://modarchive.org/index.php?request=view_by_moduleid&query=172183).
 * SFX made with [Bfxr](https://www.bfxr.net/).
 
 ## Development

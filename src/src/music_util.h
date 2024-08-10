@@ -41,7 +41,15 @@ public:
         }
     }
 
-    // Play music if the setting is enabled.
+    // Play the menu music, if music is enabled.
+    static void play_menu()
+    {
+        if (memory::save_data.enable_music)
+        {
+            bn::music_items::mu_pms_are1.play(music_volume);
+        }
+    }
+
     // Play random game music if music is enabled.
     // Use this function instead of playing music directly.
     static void play_random()

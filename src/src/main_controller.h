@@ -353,14 +353,17 @@ private:
             }
             else if (key == menu_option_key::toggle_music)
             {
-                auto new_setting = !memory::music_enabled();
-                if (!new_setting)
+                memory::music_enabled_set(!memory::music_enabled());
+                if (memory::music_enabled())
                 {
-                    music_util::maybe_stop();
+                    music_util::play_menu();
                 }
-                memory::music_enabled_set(new_setting);
+                else
+                {
+                    music_util::stop();
+                }
                 memory::save();
-                settings_menu.options[1].text = new_setting ? "MUSIC ON" : "MUSIC OFF";
+                settings_menu.options[1].text = memory::music_enabled() ? "MUSIC ON" : "MUSIC OFF";
                 generate_options_text();
                 bn::sound_items::menu_ok.play();
             }

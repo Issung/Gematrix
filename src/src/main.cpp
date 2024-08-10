@@ -13,6 +13,7 @@ int main()
 {
     bn::core::init();
     memory::init();
+
     auto black = bn::color(0, 0, 0);
     bn::bg_palettes::set_transparent_color(black);
 
@@ -61,9 +62,10 @@ int main()
         bn::core::update();
     }
 
-    // Fade-to-menu complete, release the bg & palette pointers.
+    // Fade-to-menu complete, release the bg & palette pointers + play music.
     bg.reset();
     palette.reset();
+    music_util::play_menu();
 
     while (true)
     {

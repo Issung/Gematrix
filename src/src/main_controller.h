@@ -134,13 +134,13 @@ private:
         else if (state == overall_state::paused)
         {
             gc.pause();
-            music_util::maybe_pause();
+            music_util::pause();
             bn::sound_items::pause.play();
             change_menu(&pause_menu, menu_sound::none);
         }
         else if (state == overall_state::ingame)
         {
-            music_util::maybe_resume();
+            music_util::resume();
             change_menu(nullptr, menu_sound::ok);
             gc.show();
         }
@@ -341,7 +341,7 @@ private:
             }
 
             // MENU: SETTINGS
-            else if (key == menu_option_key::sfx_toggle)
+            else if (key == menu_option_key::toggle_sfx)
             {
                 auto new_setting = !memory::sfx_enabled();
                 sound_util::set_sound_enabled(new_setting);
@@ -351,7 +351,7 @@ private:
                 generate_options_text();
                 bn::sound_items::menu_ok.play();
             }
-            else if (key == menu_option_key::music_toggle)
+            else if (key == menu_option_key::toggle_music)
             {
                 auto new_setting = !memory::music_enabled();
                 if (!new_setting)
@@ -372,7 +372,7 @@ private:
             }
             else if (key == menu_option_key::restart)
             {
-                music_util::maybe_stop();
+                music_util::stop();
                 gc.reset(frames_since_boot);
                 change_state(overall_state::ingame);
             }
@@ -380,7 +380,7 @@ private:
             {
                 background.reset();
                 change_state(overall_state::menus);
-                music_util::maybe_stop();
+                music_util::stop();
             }
         }
     }
@@ -486,8 +486,8 @@ public:
         records_menu.options.push_back(menu_option("SPRINT", menu_option_key::records_sprint));
         records_menu.options.push_back(menu_option("TIME ATTACK", menu_option_key::records_timeattack));
 
-        settings_menu.options.push_back(menu_option(memory::sfx_enabled() ? "SFX ON" : "SFX OFF", menu_option_key::sfx_toggle));
-        settings_menu.options.push_back(menu_option(memory::music_enabled() ? "MUSIC ON" : "MUSIC OFF", menu_option_key::music_toggle));
+        settings_menu.options.push_back(menu_option(memory::sfx_enabled() ? "SFX ON" : "SFX OFF", menu_option_key::toggle_sfx));
+        settings_menu.options.push_back(menu_option(memory::music_enabled() ? "MUSIC ON" : "MUSIC OFF", menu_option_key::toggle_music));
 
         credits_menu.interactable = false;
         credits_menu.options.push_back(menu_option("RUNNING ON BUTANO", menu_option_key::noop));

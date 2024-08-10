@@ -33,8 +33,8 @@ enum class menu_option_key : int
     records_level2,
 
     // Settings Menu
-    music_toggle,
-    sfx_toggle,
+    toggle_music,
+    toggle_sfx,
 
     // Pause Menu
     resume,

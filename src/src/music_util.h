@@ -15,7 +15,7 @@ private:
 public:
     // Stop music if there is some playing.
     // Call this when the user turns off music.
-    static void maybe_stop()
+    static void stop()
     {
         if (bn::music::playing())
         {
@@ -24,7 +24,7 @@ public:
     }
 
     // Pause music if there is some playing.
-    static void maybe_pause()
+    static void pause()
     {
         if (bn::music::playing())
         {
@@ -33,7 +33,7 @@ public:
     }
 
     // Resume music if there is some paused.
-    static void maybe_resume()
+    static void resume()
     {
         if (bn::music::paused())
         {

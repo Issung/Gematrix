@@ -8,6 +8,7 @@
 #include "bn_optional.h"
 #include "bn_sprite_ptr.h"
 #include "gj_big_sprite_font.h"
+#include "bn_sound_items.h"
 
 #define Y_POS 50
 #define ARROWS_SPACING 5
@@ -91,24 +92,46 @@ public:
         if (bn::keypad::left_pressed() && position > 0)
         {
             position -= 1;
+            bn::sound_items::menu_back.play();
         }
         else if (bn::keypad::right_pressed() && position < RECORD_NAME_LENGTH - 1)
         {
             position += 1;
+            bn::sound_items::menu_ok.play();
         }
         else if (bn::keypad::up_pressed())
         {
             chars[position] = (chars[position] == 0) ? (NAME_ALLOWED_CHARS_COUNT - 1) : (chars[position] - 1);
             up_arrow->set_visible(false);
+            bn::sound_items::menu_down.play();
         }
         else if (bn::keypad::down_pressed())
         {
             chars[position] = (chars[position] == NAME_ALLOWED_CHARS_COUNT - 1) ? 0 : (chars[position] + 1);
             down_arrow->set_visible(false);
+            bn::sound_items::menu_up.play();
+        }
+        else if (bn::keypad::b_pressed())
+        {
+            if (position > 0)
+            {
+                position -= 1;
+            }
+
+            bn::sound_items::menu_back.play();
         }
         else if (bn::keypad::a_pressed())
         {
-            return true;
+            bn::sound_items::menu_ok.play();
+
+            if (position < RECORD_NAME_LENGTH - 1)
+            {
+                position += 1;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         up_arrow->set_x(name_sprites[position].x() + 1);

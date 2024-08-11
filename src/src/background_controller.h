@@ -4,6 +4,7 @@
 #include "bn_random.h"
 #include "bn_affine_bg_items_grid.h"
 #include "bn_affine_bg_ptr.h"
+#include "bn_bg_palette_ptr.h"
 
 // Construct this before the `main_controller` (which makes all other controllers)
 // so that the board background drawers over the top of this background.
@@ -23,7 +24,6 @@ private:
     bn::fixed speed = 1.0;
     bool braking = false;
     bool frozen = false;
-
 public:
     void thaw()
     {
@@ -88,5 +88,36 @@ public:
 
         bg.set_x(bg.x() + (x_offset * speed));
         bg.set_y(bg.y() + (y_offset * speed));
+    }
+
+    // Update palette of the background to match the user's setting.
+    void update_palette()
+    {
+        auto palette = bg.palette();
+        
+        // The background palette is shared across the background, 
+
+        if (memory::palette() == palette_setting::og)
+        {
+            palette.set_color(240, bn::color(1, 1, 1));
+            palette.set_color(241, bn::color(2, 2, 2));
+            palette.set_color(242, bn::color(3, 3, 3));
+            palette.set_color(243, bn::color(4, 4, 4));
+            palette.set_color(244, bn::color(5, 5, 5));
+        }
+        else
+        {
+            palette.set_color(240, bn::color(6, 6, 6));
+            palette.set_color(241, bn::color(9, 9, 9));
+            palette.set_color(242, bn::color(12, 12, 12));
+            palette.set_color(243, bn::color(15, 15, 15));
+            palette.set_color(244, bn::color(18, 18, 18));
+        }
+    }
+
+    // Constructor.
+    background_controller()
+    {
+        update_palette();
     }
 };

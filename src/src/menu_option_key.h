@@ -35,6 +35,7 @@ enum class menu_option_key : int
     // Settings Menu
     toggle_music,
     toggle_sfx,
+    toggle_palette,
 
     // Pause Menu
     resume,

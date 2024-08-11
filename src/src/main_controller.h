@@ -47,7 +47,7 @@ private:
     menu records_menu = menu("RECORDS", &main_menu);    // Record viewing game mode selection.
     menu records_levels_menu = menu("RECORDS LEVEL", &records_menu);    // Menu used for record level select, is altered to be used for different modes.
     menu records_display_menu = menu("X RECORDS", &records_levels_menu);    // Menu used for record list display, is altered to be used for different modes/levels.
-    menu settings_menu = menu("SETTINGS", &main_menu);  // Options: [0] = SFX, [1] = MUSIC.
+    menu settings_menu = menu("SETTINGS", &main_menu);  // Options: [0] = SFX, [1] = MUSIC, [2] = PALETTE.
     menu credits_menu = menu("CREDITS", &main_menu);
     menu pause_menu = menu("PAUSE");    // Pause menu used in game.
     menu gameover_menu = menu("GAMEOVER");  // Gameover menu used when user's score was not a record. Hiscore entry is its own state.
@@ -373,6 +373,15 @@ private:
                 generate_options_text();
                 bn::sound_items::menu_ok.play();
             }
+            else if (key == menu_option_key::toggle_palette)
+            {
+                memory::palette_set(memory::palette() == palette_setting::lcd ? palette_setting::og : palette_setting::lcd);
+                background.update_palette();
+                memory::save();
+                settings_menu.options[2].text = memory::palette() == palette_setting::og ? "ORIGINAL PALETTE" : "BRIGHTER PALETTE";
+                generate_options_text();
+                bn::sound_items::menu_ok.play();
+            }
 
             // MENU: PAUSE
             else if (key == menu_option_key::resume)
@@ -503,6 +512,7 @@ public:
 
         settings_menu.options.push_back(menu_option(memory::sfx_enabled() ? "SFX ON" : "SFX OFF", menu_option_key::toggle_sfx));
         settings_menu.options.push_back(menu_option(memory::music_enabled() ? "MUSIC ON" : "MUSIC OFF", menu_option_key::toggle_music));
+        settings_menu.options.push_back(menu_option(memory::palette() == palette_setting::og ? "ORIGINAL PALETTE" : "BRIGHTER PALETTE", menu_option_key::toggle_palette));
 
         credits_menu.interactable = false;
         credits_menu.options.push_back(menu_option("RUNNING ON BUTANO", menu_option_key::noop));

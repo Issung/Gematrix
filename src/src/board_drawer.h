@@ -16,6 +16,7 @@
 #include "board_anims.h"
 #include "bn_sprite_palette_actions.h"
 #include "bn_sprite_palettes_actions.h"
+#include "memory.h"
 
 // TODO: Do we have to define this here? T-T It's being used in anim_slide.
 static bn::fixed_point positions[board::rows][board::cols]; // The point of each drawn sprite, saved for use by the selector. [row][col]
@@ -204,7 +205,7 @@ private:
         }
         else
         {
-            auto palette = colors[(int)gem_value];
+            auto palette = palettes[(int)gem_value];
             gem_sprite.set_palette(palette);
             gem_sprite.set_visible(true);
         }
@@ -265,21 +266,37 @@ private:
     }
 
 public:
+    bn::sprite_palette_ptr wildcard_palette = bn::sprite_items::gem.palette_item().create_palette();
+
     // Array must line up with gem_types enum values.
-    /*const*/ bn::sprite_palette_ptr colors[board::max_colors] =    // `const` keyword breaks modifying the wildcard palette.
+    bn::sprite_palette_ptr palettes_og[board::max_colors] =
     {
-        /* 0 */ create_palette(31, 0, 0),   // Red
-        /* 1 */ create_palette(0, 31, 0),   // Green
-        /* 2 */ create_palette(0, 0, 31),   // Blue
-        /* 3 */ create_palette(31, 0, 31),  // Purple
-        /* 4 */ create_palette(31, 16, 0),  // Orange
-        /* 5 */ bn::sprite_items::gem.palette_item().create_palette(),  // Wildcard
-        // No color for empty, just make the sprite invisible.
+        create_palette(31, 0, 0),   // 0 Red
+        create_palette(0, 31, 0),   // 1 Green
+        create_palette(0, 0, 31),   // 2 Blue
+        create_palette(31, 0, 31),  // 3 Pink
+        create_palette(31, 16, 0),  // 4 Orange
+        wildcard_palette,           // 5 Wildcard
     };
+
+    bn::sprite_palette_ptr palettes_lcd[board::max_colors] =
+    {
+        create_palette(31, 0, 0),   // 0 Red
+        create_palette(0, 31, 0),   // 1 Green
+        create_palette(0, 0, 31),   // 2 Blue
+        create_palette(21, 7, 9),   // 3 Purple (changed from Pink)
+        create_palette(31, 31, 0),  // 4 Yellow (changed from Orange)
+        wildcard_palette,           // 5 Wildcard
+    };
+
+    // Pointer to the first element of an array of palette ptrs. Swapped between palettes_og and palettes_lcd depending on saved setting.
+    // No palette for empty, just make the sprite invisible.
+    bn::sprite_palette_ptr* palettes = palettes_og;
+
     // The palette defined in the gem sprite is a gradient between the 5 other standard colors.
     // We then rotate the palette in each update() call to give it an alternating colors effect.
     // Concept inspired by `\butano\examples\palettes\src\main.cpp`.
-    bn::sprite_palette_rotate_by_action palette_rotate_action = bn::sprite_palette_rotate_by_action(colors[5], 15, 1);   // 2nd arg is the amount of frames per rotate.
+    bn::sprite_palette_rotate_by_action palette_rotate_action = bn::sprite_palette_rotate_by_action(palettes[5], 12, 1);   // 2nd arg is the amount of frames per rotate.
 
     // Constructor.
     board_drawer(board& _b) : b(_b)
@@ -336,12 +353,14 @@ public:
 
     void show()
     {
+        palettes = memory::palette() == palette_setting::og ? palettes_og : palettes_lcd;
+
         for (int r = 0; r < board::rows; ++r)
         {
             for (int c = 0; c < board::cols; ++c)
             {
                 auto palette_index = (int)b.gems[r][c];
-                auto palette = colors[palette_index];
+                auto palette = palettes[palette_index];
                 gem_sprites[r * board::cols + c].set_palette(palette);
                 gem_sprites[r * board::cols + c].set_visible(true);
             }
@@ -368,12 +387,12 @@ public:
 
         auto sprite_a = gem_sprites[(row_a * board::cols) + col_a];
         auto type_a = b.gems[row_a][col_a];
-        auto palette_a = colors[(int)type_a];
+        auto palette_a = palettes[(int)type_a];
         slides.push_back(anim_slide(row_b, col_b, row_a, col_a, sprite_a, palette_a, type_a != gem_type::Empty));
 
         auto sprite_b = gem_sprites[(row_b * board::cols) + col_b];
         auto type_b = b.gems[row_b][col_b];
-        auto palette_b = colors[(int)type_b];
+        auto palette_b = palettes[(int)type_b];
         slides.push_back(anim_slide(row_a, col_a, row_b, col_b, sprite_b, palette_b, type_b != gem_type::Empty));
     }
 
@@ -426,7 +445,7 @@ public:
         for (auto& drop : drops)
         {
             auto spr = gem_sprites[(drop.to_row * board::cols) + drop.col];
-            auto palette = colors[(int)drop.type];
+            auto palette = palettes[(int)drop.type];
             slides.push_back(anim_slide(drop.from_row, drop.col, drop.to_row, drop.col, spr, palette, drop.type != gem_type::Empty));
         }
     }
@@ -453,7 +472,7 @@ public:
                 auto number = anim[row][col];
 
                 auto spr = gem_sprites[(row * board::cols) + col];
-                auto palette = colors[(int)b.gems[row][col]];
+                auto palette = palettes[(int)b.gems[row][col]];
                 auto slide = anim_slide(row - board::rows, col, row, col, spr, palette, true);
                 slide.frames_delay = number * delay_between_each_gem_drop;
                 slides.push_back(slide);

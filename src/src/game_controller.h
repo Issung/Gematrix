@@ -219,7 +219,7 @@ private:
                     // only sees the top-most point for a single match.
                     for (auto& p : m.positions)
                     {
-                        auto palette = bd.colors[(int)m.type];
+                        auto palette = bd.palettes[(int)m.type];
                         auto ft = floating_text(positions[p.row][p.col], palette, points_per_gem);
                         floating_texts.push_back(ft);
                     }

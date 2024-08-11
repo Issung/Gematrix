@@ -22,6 +22,12 @@
 #define LEVELS 3
 #define TIMEATTACK_RECORD_LIST bn::array<record_timeattack, MAX_RECORDS>
 
+enum class palette_setting
+{
+    og, // Original design for AGS-101 and GBM or emulation.
+    lcd,    // Lcd palette for GBA / SP.
+};
+
 // A single record for the sprint mode.
 struct record_sprint
 {
@@ -57,6 +63,7 @@ struct sram_data
 {
     bool enable_sfx = true;
     bool enable_music = true;
+    palette_setting palette = palette_setting::og;
     
     // Arrays of arrays, for level selection, then records.
     // Levels (0 - 2), 0 is the lowest/fastest level, going upwards from there.
@@ -240,6 +247,16 @@ public:
     static void sfx_enabled_set(bool enabled)
     {
         save_data.enable_sfx = enabled;
+    }
+
+    static palette_setting palette()
+    {
+        return save_data.palette;
+    }
+
+    static void palette_set(palette_setting new_palette)
+    {
+        save_data.palette = new_palette;
     }
 
     // Write `save_data` to SRAM.

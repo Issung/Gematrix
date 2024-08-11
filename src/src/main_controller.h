@@ -394,6 +394,24 @@ private:
         }
     }
 
+    // Show the gameover menu, done either at game end or after hiscore entry.
+    void show_gameover_menu()
+    {
+        change_state(overall_state::menus, /*hide_game: */ false);
+        change_menu(&gameover_menu, menu_sound::none);
+
+        while (gameover_menu.options.size() > 2)
+        {
+            gameover_menu.options.pop_back();
+        }
+
+        auto time_or_score_string = gc.get_mode() == game_mode::sprint ? "TIME:" : "SCORE:";
+        text_generator.generate(0, -30, time_or_score_string, menu_options_sprites[2]);
+
+        auto score_string = gc.get_gamemode_metric_display_string();
+        text_generator.generate(0, -15, score_string, menu_options_sprites[3]);
+    }
+
 public:
     void update()
     {
@@ -417,19 +435,7 @@ public:
                     }
                     else
                     {
-                        change_state(overall_state::menus, /*hide_game: */ false);
-                        change_menu(&gameover_menu, menu_sound::none);
-
-                        while (gameover_menu.options.size() > 2)
-                        {
-                            gameover_menu.options.pop_back();
-                        }
-
-                        auto time_or_score_string = gc.get_mode() == game_mode::sprint ? "TIME:" : "SCORE:";
-                        text_generator.generate(0, -30, time_or_score_string, menu_options_sprites[2]);
-
-                        auto score_string = gc.get_gamemode_metric_display_string();
-                        text_generator.generate(0, -15, score_string, menu_options_sprites[3]);
+                        show_gameover_menu();
                     }
                 }
             }
@@ -452,9 +458,7 @@ public:
                 auto metric = gc.get_gamemode_metric();
 
                 memory::save_record(mode, level, name, metric);
-                background.reset();
-                change_state(overall_state::menus);
-                music_util::play_menu();
+                show_gameover_menu();
             }
         }
         else

@@ -208,6 +208,11 @@ private:
             }
         }
 
+        if (current_menu == &gameover_menu)
+        {
+            music_util::slowdown();
+        }
+
         if (!current_menu->interactable)
         {
             return;
@@ -291,6 +296,7 @@ private:
             {
                 auto level = (int)key - (int)menu_option_key::play_level0;
                 gc.newgame(levels_mode, level, frames_since_boot);
+                music_util::set_seed(frames_since_boot);
                 change_state(overall_state::ingame);
             }
 
@@ -379,11 +385,11 @@ private:
                 gc.reset(frames_since_boot);
                 change_state(overall_state::ingame);
             }
-            else if (key == menu_option_key::quit)
+            else if (key == menu_option_key::quit)  // Also used by gameover screen
             {
                 background.reset();
                 change_state(overall_state::menus);
-                music_util::stop();
+                music_util::play_menu();
             }
         }
     }
@@ -434,6 +440,7 @@ public:
         }
         else if (state == overall_state::hiscore)
         {
+            music_util::slowdown();
             sin_wave_title();
             auto name_entered = hec.update();
             
@@ -447,6 +454,7 @@ public:
                 memory::save_record(mode, level, name, metric);
                 background.reset();
                 change_state(overall_state::menus);
+                music_util::play_menu();
             }
         }
         else

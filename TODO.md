@@ -42,8 +42,15 @@
     * ~~Fix positioning for menus with even amount of options.~~
     * ~~Animate title (wobble effect from examples)~~
 * Music
-    * Menu track
-    * Randomly selected game tracks
+    * ~~Menu track~~
+        * Alternate menu track?
+    * ~~Randomly selected game tracks~~
+        * Maybe add some more
+    * ~~Stop music whenever a game countdown is started~~
+    * ~~Play new music whenever a game countdown ends~~
+    * ~~Pause music on pause menu~~
+    * ~~Slowdown & fadeout music on gameover/hiscore~~
+    * ~~Play menu music when going back to menu from gameover/hiscore~~
 * SFX
     * ~~Swap sound~~
         * Change it?

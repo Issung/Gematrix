@@ -408,6 +408,9 @@ private:
             BN_ASSERT(false, "Unknown go_state: ", (int)go_state);
         }
 
+        // Call this repeatedly while doing the gameover animation, it will continue to 
+        // be called in main_controller on the gameover/hiscore screens.
+        music_util::slowdown();
         animate_floating_texts();
         return false;
     }
@@ -541,6 +544,8 @@ public:
         bd.reset();
         bd.animate_random_drop_all_in();
         floating_texts.clear();
+
+        music_util::stop();
 
         background.reset();
     }

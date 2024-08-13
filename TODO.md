@@ -1,5 +1,5 @@
 # TODO
-* Think of game name
+* ~~Think of game name~~
 * ~~Add game start splash screen, with logos:~~
     * ~~GBAJam2024~~
     * ~~Butano~~

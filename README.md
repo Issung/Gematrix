@@ -4,6 +4,7 @@ My first and hopefully not last Game Boy Advance game! Written in C++ with Butan
 
 ## Credits
 * [Butano](https://github.com/GValiente/butano) by [GValiente](https://github.com/GValiente/butano).
+* SFX made with [Bfxr](https://www.bfxr.net/).
 * Font by [2Pblog1](https://x.com/2pblog1).
 * Menu music: [pms_are1.it by Powerack](https://modarchive.org/index.php?request=view_by_moduleid&query=162054)
 * Game music #1: [4_RNDD!.xm by Drozerix](https://modarchive.org/index.php?request=view_by_moduleid&query=172898).
@@ -11,7 +12,6 @@ My first and hopefully not last Game Boy Advance game! Written in C++ with Butan
 * Game music #3: [Cirno.it by Maris](https://modarchive.org/index.php?request=view_by_moduleid&query=185072).
 * Game music #4: [Fckdarules.xm by JAM](https://modarchive.org/index.php?request=view_by_moduleid&query=169181).
 * Game music #5: [L3V3L_33 by Drozerix](https://modarchive.org/index.php?request=view_by_moduleid&query=172183).
-* SFX made with [Bfxr](https://www.bfxr.net/).
 
 ## Development
 
@@ -30,6 +30,7 @@ My first and hopefully not last Game Boy Advance game! Written in C++ with Butan
 #### Guides Used 
 * [Butano Getting Started](https://gvaliente.github.io/butano/getting_started.html).
 * [GDB Debugging with mGBA](https://felixjones.co.uk/mgba_gdb/vscode.html).
+* [Embedding emulator on itch.io](https://www.matthughson.com/2020/07/17/nesdev-embedding-an-emulator-on-itch-io/).
 * Help from the lovely folks in the gbadev Discord.
 
 ### Build / Debug

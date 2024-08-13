@@ -4,7 +4,6 @@
 #include "bn_core.h"
 #include "bn_log.h"
 #include "bn_sprite_items_gem.h"
-#include "bn_sprite_items_wildcard.h"
 #include "bn_sprite_palette_item.h"
 #include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_ptr.h"

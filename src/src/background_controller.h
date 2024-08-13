@@ -1,5 +1,6 @@
 #pragma once
 
+#include "memory.h"
 #include "bn_fixed.h"
 #include "bn_random.h"
 #include "bn_affine_bg_items_grid.h"

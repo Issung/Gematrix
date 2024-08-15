@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <style>
@@ -5,20 +6,94 @@
                 margin: 0;
                 padding: 0;
             }
+
+            /* Use same font from the itch.io page. */
+            @font-face {
+                font-family: '04b03';
+                src: url('04b03.ttf') format('truetype');
+                font-weight: normal;
+                font-style: normal;
+            }
         </style>
     </head>
     <body>
-        <div style="width:100%; height:100%; max-width:100%;">
+        <!-- Perfect height to have no borders with the display width set in itch.io. -->
+        <div style="height: 427px;"> 
             <div id="game"></div>
         </div>
+        <div id="guide" style="margin-top: 5px; text-align: center; font-family:'04b03';">
+            <p style="margin-top: 5px;">
+                <strong>Menus</strong>: Arrow Keys up/down, X to select, Z to go back<br/>
+                <strong>Ingame</strong>: Arrow Keys to change gem, hold X + Arrow Key to swap,<br/>
+                Enter to pause
+            </p>
+        </div>
         <script>
-            EJS_player = "#game";
+            EJS_player = "div#game";
             EJS_core = "gba";
-            EJS_gameName = "hex";
+            EJS_gameName = "Gematrix";
             EJS_color = "#000000";
             EJS_startOnLoaded = true;
             EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
-            EJS_gameUrl = "https://html-classic.itch.zone/html/11139369/hex.gba";
+            EJS_gameUrl = "GematrixV1.gba";
+            // Set what buttons are available. https://emulatorjs.org/docs/options#ejs_buttons
+            EJS_Buttons = {
+                cacheManager: false,
+                cheat: false,
+                fullscreen: true,
+                gamepad: false,
+                loadSavFiles: false,
+                loadState: false,
+                mute: true,
+                playPause: false,
+                quickLoad: false,
+                quickSave: false,
+                restart: false,
+                saveSavFiles: false,
+                saveState: false,
+                screenRecord: false,
+                screenshot: false,
+                settings: true,
+                volume: true,
+            }
+            // Defaults taken from EmulatorJs repo data\src\emulator.js
+            // Remap controls to match mGBA default controls.
+            // https://emulatorjs.org/docs4devs/control-mapping
+            EJS_defaultControls = {
+                0: {
+                    0: {
+                        'value': 'z',
+                        'value2': 'BUTTON_1'
+                    },
+                    3: {
+                        'value': 'enter',
+                        'value2': 'START'
+                    },
+                    4: {
+                        'value': 'up arrow',
+                        'value2': 'DPAD_UP'
+                    },
+                    5: {
+                        'value': 'down arrow',
+                        'value2': 'DPAD_DOWN'
+                    },
+                    6: {
+                        'value': 'left arrow',
+                        'value2': 'DPAD_LEFT'
+                    },
+                    7: {
+                        'value': 'right arrow',
+                        'value2': 'DPAD_RIGHT'
+                    },
+                    8: {
+                        'value': 'x',
+                        'value2': 'BUTTON_2'
+                    }
+                },
+                1: {},
+                2: {},
+                3: {}
+            };
         </script>
         <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
     </body>

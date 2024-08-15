@@ -518,7 +518,7 @@ public:
         credits_menu.options.push_back(menu_option("RUNNING ON BUTANO", menu_option_key::noop));
         credits_menu.options.push_back(menu_option("SHOUT-OUT GBADEV DISCORD", menu_option_key::noop));
         credits_menu.options.push_back(menu_option("ALL CREDITS & SOURCE CODE:", menu_option_key::noop));
-        credits_menu.options.push_back(menu_option("GITHUB.COM/ISSUNG/GBAJAM2024", menu_option_key::noop));
+        credits_menu.options.push_back(menu_option("GITHUB.COM/ISSUNG/GEMATRIX", menu_option_key::noop));
         credits_menu.options.push_back(menu_option("FOLLOW :) X.COM/ISSUNGEE", menu_option_key::noop));
 
         pause_menu.options.push_back(menu_option("RESUME", menu_option_key::resume));

@@ -178,47 +178,48 @@ public:
             // Populate defaults.
             save_data.enable_sfx = true;
             save_data.enable_music = true;
+            save_data.palette = palette_setting::og;
 
             // TODO: Make up new scores & names.
 
-            // sprints
+            // Sprints LOWER IS BETTER
             // level 0
-            save_data.records_sprint[0][0] = record_sprint(util::to_record_name("ONE"), 2000);
-            save_data.records_sprint[0][1] = record_sprint(util::to_record_name("TOO"), 3938);
-            save_data.records_sprint[0][2] = record_sprint(util::to_record_name("TEE"), 4628);
-            save_data.records_sprint[0][3] = record_sprint(util::to_record_name("FOO"), 5619);
-            save_data.records_sprint[0][4] = record_sprint(util::to_record_name("FII"), 6682);
+            save_data.records_sprint[0][0] = record_sprint(util::to_record_name("ISN"), 2307);  // 00:38.45
+            save_data.records_sprint[0][1] = record_sprint(util::to_record_name("SND"), 2532);
+            save_data.records_sprint[0][2] = record_sprint(util::to_record_name("ZAP"), 2760);
+            save_data.records_sprint[0][3] = record_sprint(util::to_record_name("BOO"), 2905);
+            save_data.records_sprint[0][4] = record_sprint(util::to_record_name("LST"), 3100);
             // level 1
-            save_data.records_sprint[1][0] = record_sprint(util::to_record_name("ONE"), 2000);
-            save_data.records_sprint[1][1] = record_sprint(util::to_record_name("TOO"), 3938);
-            save_data.records_sprint[1][2] = record_sprint(util::to_record_name("TEE"), 4628);
-            save_data.records_sprint[1][3] = record_sprint(util::to_record_name("FOO"), 5619);
-            save_data.records_sprint[1][4] = record_sprint(util::to_record_name("FII"), 6682);
+            save_data.records_sprint[1][0] = record_sprint(util::to_record_name("ISN"), 5640);   // 1:34.06
+            save_data.records_sprint[1][1] = record_sprint(util::to_record_name("BOB"), 6123);
+            save_data.records_sprint[1][2] = record_sprint(util::to_record_name("YUM"), 6499);
+            save_data.records_sprint[1][3] = record_sprint(util::to_record_name("KTY"), 6765);
+            save_data.records_sprint[1][4] = record_sprint(util::to_record_name("CAT"), 7000);
             // level 2
-            save_data.records_sprint[2][0] = record_sprint(util::to_record_name("ONE"), 2000);
-            save_data.records_sprint[2][1] = record_sprint(util::to_record_name("TOO"), 3938);
-            save_data.records_sprint[2][2] = record_sprint(util::to_record_name("TEE"), 4628);
-            save_data.records_sprint[2][3] = record_sprint(util::to_record_name("FOO"), 5619);
-            save_data.records_sprint[2][4] = record_sprint(util::to_record_name("FII"), 6682);
-            // timeattack
+            save_data.records_sprint[2][0] = record_sprint(util::to_record_name("ISN"), 14325);  // 3:58.76
+            save_data.records_sprint[2][1] = record_sprint(util::to_record_name("EZY"), 14423);
+            save_data.records_sprint[2][2] = record_sprint(util::to_record_name("QQQ"), 14642);
+            save_data.records_sprint[2][3] = record_sprint(util::to_record_name("BAD"), 14890);
+            save_data.records_sprint[2][4] = record_sprint(util::to_record_name("WIN"), 15100);
+            // Time Attack HIGHER IS BETTER
             // level 0
-            save_data.records_timeattack[0][0] = record_timeattack(util::to_record_name("ONE"), 1000);
-            save_data.records_timeattack[0][1] = record_timeattack(util::to_record_name("TWO"), 800);
-            save_data.records_timeattack[0][2] = record_timeattack(util::to_record_name("TRE"), 500);
-            save_data.records_timeattack[0][3] = record_timeattack(util::to_record_name("FOR"), 400);
-            save_data.records_timeattack[0][4] = record_timeattack(util::to_record_name("FIV"), 150);
+            save_data.records_timeattack[0][0] = record_timeattack(util::to_record_name("ISN"), 1631);
+            save_data.records_timeattack[0][1] = record_timeattack(util::to_record_name("ACE"), 1611);
+            save_data.records_timeattack[0][2] = record_timeattack(util::to_record_name("GGG"), 1542);
+            save_data.records_timeattack[0][3] = record_timeattack(util::to_record_name("BOT"), 1497);
+            save_data.records_timeattack[0][4] = record_timeattack(util::to_record_name("MEH"), 1454);
             // level 1
-            save_data.records_timeattack[1][0] = record_timeattack(util::to_record_name("ONE"), 1000);
-            save_data.records_timeattack[1][1] = record_timeattack(util::to_record_name("TWO"), 800);
-            save_data.records_timeattack[1][2] = record_timeattack(util::to_record_name("TRE"), 500);
-            save_data.records_timeattack[1][3] = record_timeattack(util::to_record_name("FOR"), 400);
-            save_data.records_timeattack[1][4] = record_timeattack(util::to_record_name("FIV"), 150);
+            save_data.records_timeattack[1][0] = record_timeattack(util::to_record_name("ISN"), 3386);
+            save_data.records_timeattack[1][1] = record_timeattack(util::to_record_name("ELF"), 3267);
+            save_data.records_timeattack[1][2] = record_timeattack(util::to_record_name("BRE"), 3211);
+            save_data.records_timeattack[1][3] = record_timeattack(util::to_record_name("OOP"), 3180);
+            save_data.records_timeattack[1][4] = record_timeattack(util::to_record_name("HAX"), 3095);
             // level 2
-            save_data.records_timeattack[2][0] = record_timeattack(util::to_record_name("ONE"), 1000);
-            save_data.records_timeattack[2][1] = record_timeattack(util::to_record_name("TWO"), 800);
-            save_data.records_timeattack[2][2] = record_timeattack(util::to_record_name("TRE"), 500);
-            save_data.records_timeattack[2][3] = record_timeattack(util::to_record_name("FOR"), 400);
-            save_data.records_timeattack[2][4] = record_timeattack(util::to_record_name("FIV"), 150);
+            save_data.records_timeattack[2][0] = record_timeattack(util::to_record_name("ISN"), 6680);
+            save_data.records_timeattack[2][1] = record_timeattack(util::to_record_name("VIP"), 6579);
+            save_data.records_timeattack[2][2] = record_timeattack(util::to_record_name("NAN"), 6453);
+            save_data.records_timeattack[2][3] = record_timeattack(util::to_record_name("HAX"), 6311);
+            save_data.records_timeattack[2][4] = record_timeattack(util::to_record_name("BUG"), 6282);
             save_data.last_name = util::to_record_name("AAA");
             save_data.format_tag = expected_format_tag;
             bn::sram::write(save_data);

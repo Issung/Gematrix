@@ -8,9 +8,9 @@ class levels
 public:
     // Score to reach.
     static constexpr unsigned int sprint[LEVELS] = {
-        500,
+        1000,
+        2500,
         5000,
-        10000,
     };
 
     // Time measured in frames (60 fps).

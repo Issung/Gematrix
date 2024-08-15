@@ -1,4 +1,6 @@
 # TODO
+
+## General
 * ~~Think of game name~~
 * ~~Add game start splash screen, with logos:~~
     * ~~GBAJam2024~~
@@ -17,7 +19,7 @@
     * 
 * ~~Don't generate board with matches~~
     * Optimise
-* Implement gamemodes
+* ~~Implement gamemodes~~
     * ~~Sprint~~
         * ~~Variants (300 points, 1000 points, 5000 points)~~
     * ~~Time Attack~~
@@ -28,7 +30,7 @@
         * Fade in to completion screen somehow so it's not so abrubt
         * ~~New hiscore name entry~~
     * ~~In-game UI changes depending on mode.~~
-* Implement hi-scores
+* ~~Implement hi-scores~~
     * ~~Sprint variants~~
     * ~~Time Attack variants~~
     * Survival
@@ -59,7 +61,7 @@
         * 5-of-a-kind variant
         * ~~Match pitches increasing for combos~~
     * ~~Score increasing sound~~
-    * Gameover
+    * ~~Gameover~~
 * Juice
     * ~~Game start board drop-in animations~~
         * Add more variants
@@ -71,10 +73,10 @@
     * Background animation / flashing
     * Pointfeeds on the right
     * Background columns move separately
-* Settings
+* ~~Settings~~
     * ~~Disable SFX~~
     * ~~Disable music~~
-* Refine gameover visuals
+* ~~Refine gameover visuals~~
     ~~Currently too rough around the edges, jumps straight to the end screen with no warning.~~
     * ~~Countdown to gameover sounds (for timeattack mode)~~
     * ~~Freeze-frame~~

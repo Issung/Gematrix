@@ -1,5 +1,14 @@
 # TODO
 
+## Itch.io Submission
+* Upload new rom version with new levels and default records
+* Upload new embed zip with new rom version
+* Photo of the game running on GBM
+* Youtube link of gameplay
+* Investigate if possible to fix the bottom left/right corners on the tiling background.
+* Investigate using different display width for embed.
+* Upload new cover version with fixed aliasing and spacing.
+
 ## General
 * ~~Think of game name~~
 * ~~Add game start splash screen, with logos:~~
